@@ -1,21 +1,19 @@
 // ─── Defaults (used if nothing saved in localStorage) ───────────────────────
 const DEFAULT_PLAN_START = '2026-06-15';
 const DEFAULT_RACE_DATE  = '2026-10-04';
-const DEFAULT_PLAN_END   = '2026-09-27'; // 1 week before race
 
+// ─── Read from localStorage (set via Settings screen) ───────────────────────
 export const getPlanConfig = () => {
   const startStr = localStorage.getItem('tt_plan_start') || DEFAULT_PLAN_START;
   const raceStr  = localStorage.getItem('tt_race_date')  || DEFAULT_RACE_DATE;
-  const endStr   = localStorage.getItem('tt_plan_end')   || DEFAULT_PLAN_END;
   const start    = new Date(startStr + 'T00:00:00');
   const race     = new Date(raceStr  + 'T07:00:00');
-  const end      = new Date(endStr   + 'T23:59:59');
 
-  // Weeks calculated from start → end (not race date)
-  const diffDays   = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  // Total weeks = ceil of days between start and race / 7
+  const diffDays   = Math.ceil((race - start) / (1000 * 60 * 60 * 24));
   const totalWeeks = Math.max(1, Math.ceil(diffDays / 7));
 
-  return { start, race, end, totalWeeks, startStr, raceStr, endStr };
+  return { start, race, totalWeeks, startStr, raceStr };
 };
 
 // Convenience exports — these read live from localStorage each call
@@ -143,3 +141,31 @@ export const shortDay = (date) =>
 // Full day name e.g. "Monday"
 export const fullDay = (date) =>
   date.toLocaleDateString('en', { weekday: 'long' });
+
+// ─── Plan overrides (stored in localStorage) ─────────────────────────────────
+export const getPlanOverrides = () => {
+  try {
+    return JSON.parse(localStorage.getItem('tt_plan_overrides') || '{}');
+  } catch { return {}; }
+};
+
+export const savePlanOverride = (dayOffset, fromWeek, fields) => {
+  const overrides = getPlanOverrides();
+  overrides[dayOffset] = { fromWeek, ...fields };
+  localStorage.setItem('tt_plan_overrides', JSON.stringify(overrides));
+};
+
+export const resetPlanOverride = (dayOffset) => {
+  const overrides = getPlanOverrides();
+  delete overrides[dayOffset];
+  localStorage.setItem('tt_plan_overrides', JSON.stringify(overrides));
+};
+
+export const resolveSession = (defaultSession, weekNum) => {
+  const overrides = getPlanOverrides();
+  const ov = overrides[defaultSession.offset];
+  if (ov && weekNum >= ov.fromWeek) {
+    return { ...defaultSession, ...ov };
+  }
+  return defaultSession;
+};
