@@ -28,7 +28,6 @@ const DEFAULT_SESSIONS = [
 
 // ─── Edit Week Modal ──────────────────────────────────────────────────────────
 function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
-  // Local state: one entry per day, pre-filled with current resolved values
   const [rows, setRows] = useState(
     sessions.map(s => ({
       offset:     s.offset,
@@ -42,12 +41,9 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
     setRows(prev => prev.map((r, idx) => {
       if (idx !== i) return r;
       const updated = { ...r, [field]: value };
-      // Auto-fill name when switching to rest
       if (field === 'discipline' && value === 'rest') {
-        updated.name = 'Rest Day';
-        updated.desc = '';
+        updated.name = 'Rest Day'; updated.desc = '';
       }
-      // Clear rest name when switching away
       if (field === 'discipline' && value !== 'rest' && r.discipline === 'rest') {
         updated.name = DEFAULT_SESSIONS[i].name;
         updated.desc = DEFAULT_SESSIONS[i].desc || '';
@@ -57,40 +53,31 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
   };
 
   const handleSave = () => {
-    rows.forEach(row => {
-      savePlanOverride(row.offset, weekNum, {
-        discipline: row.discipline,
-        name:       row.name,
-        desc:       row.desc,
-      });
-    });
-    onSave();
-    onClose();
+    rows.forEach(row => savePlanOverride(row.offset, weekNum, {
+      discipline: row.discipline, name: row.name, desc: row.desc,
+    }));
+    onSave(); onClose();
   };
 
   const handleResetAll = () => {
     DEFAULT_SESSIONS.forEach(s => resetPlanOverride(s.offset));
-    onSave();
-    onClose();
+    onSave(); onClose();
   };
 
   const hasAnyOverride = DEFAULT_SESSIONS.some(s => !!getPlanOverrides()[s.offset]);
 
-  const inputClass = "w-full bg-[#0D0F14] border border-[#252B38] rounded-lg px-3 py-2 text-white text-sm focus:border-[#38BDF8] transition-colors";
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/70" onClick={onClose}>
       <div
-        className="w-full max-w-lg mx-auto bg-[#161A23] rounded-t-3xl border-t border-[#252B38]"
-        style={{ maxHeight: '88vh', display: 'grid', gridTemplateRows: 'auto 1fr auto' }}
-        onClick={e => e.stopPropagation()}>
-
-        {/* Header */}
-        <div className="px-6 pt-6 pb-4">
-          <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-5" />
+        className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#161A23] rounded-t-3xl border-t border-[#252B38]"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Handle + Header */}
+        <div className="px-6 pt-5 pb-4">
+          <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-4" />
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-white text-lg">Edit Week {weekNum}</h3>
+              <h3 className="font-bold text-white text-lg">Edit Plan</h3>
               <p className="text-xs text-[#6B7280] mt-0.5">
                 {weekDates[0].toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
                 {' – '}
@@ -100,8 +87,7 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
             {hasAnyOverride && (
               <button onClick={handleResetAll}
                 className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#F87171] transition-colors">
-                <RotateCcw size={12} />
-                Reset all
+                <RotateCcw size={12} /> Reset all
               </button>
             )}
           </div>
@@ -110,38 +96,34 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
           </p>
         </div>
 
-        {/* Scrollable day rows */}
-        <div className="overflow-y-auto px-6 pb-4" style={{ minHeight: 0 }}>
-          <div className="space-y-4">
+        {/* Scrollable rows — fixed height so footer is always visible */}
+        <div style={{ height: '50vh', overflowY: 'auto' }} className="px-6">
+          <div className="space-y-3 pb-2">
             {rows.map((row, i) => {
-              const date = weekDates[i];
-              const dayLabel = date.toLocaleDateString('en', { weekday: 'long' });
-              const dateLabel = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
               const isRest = row.discipline === 'rest';
-
               return (
                 <div key={i} className="bg-[#0D0F14] border border-[#252B38] rounded-2xl p-4">
-                  {/* Day header */}
+                  {/* Day label */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
                       style={{ backgroundColor: `${DISCIPLINE_COLOR[row.discipline]}22` }}>
                       {DISCIPLINE_ICON[row.discipline]}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{dayLabel}</p>
-                      <p className="text-[10px] text-[#6B7280]">{dateLabel}</p>
+                      <p className="text-sm font-semibold text-white">
+                        {weekDates[i].toLocaleDateString('en', { weekday: 'long' })}
+                      </p>
+                      <p className="text-[10px] text-[#6B7280]">
+                        {weekDates[i].toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </p>
                     </div>
                   </div>
-
                   {/* Discipline pills */}
                   <div className="grid grid-cols-3 gap-1.5 mb-3">
                     {DISCIPLINES.map(d => (
-                      <button key={d}
-                        onClick={() => updateRow(i, 'discipline', d)}
+                      <button key={d} onClick={() => updateRow(i, 'discipline', d)}
                         className={`py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center justify-center gap-1
-                          ${row.discipline === d
-                            ? 'text-[#0D0F14]'
-                            : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}
+                          ${row.discipline === d ? 'text-[#0D0F14]' : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}
                         style={row.discipline === d
                           ? { backgroundColor: DISCIPLINE_COLOR[d], borderColor: DISCIPLINE_COLOR[d] }
                           : {}}>
@@ -150,24 +132,18 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
                       </button>
                     ))}
                   </div>
-
-                  {/* Name + desc — hidden for rest */}
+                  {/* Name + desc */}
                   {!isRest && (
                     <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={row.name}
+                      <input type="text" value={row.name}
                         onChange={e => updateRow(i, 'name', e.target.value)}
                         placeholder="Session name"
-                        className={inputClass}
-                      />
-                      <textarea
-                        value={row.desc}
+                        className="w-full bg-[#161A23] border border-[#252B38] rounded-lg px-3 py-2 text-white text-sm focus:border-[#38BDF8] transition-colors" />
+                      <textarea value={row.desc}
                         onChange={e => updateRow(i, 'desc', e.target.value)}
                         placeholder="Description (optional)"
                         rows={2}
-                        className={`${inputClass} resize-none`}
-                      />
+                        className="w-full bg-[#161A23] border border-[#252B38] rounded-lg px-3 py-2 text-white text-sm focus:border-[#38BDF8] transition-colors resize-none" />
                     </div>
                   )}
                 </div>
@@ -176,15 +152,15 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
           </div>
         </div>
 
-        {/* Footer buttons */}
-        <div className="px-6 py-4 border-t border-[#252B38] flex gap-3" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+        {/* Footer — always visible, never scrolls */}
+        <div className="px-6 pt-3 pb-6 border-t border-[#252B38] flex gap-3">
           <button onClick={onClose}
             className="flex-1 py-3 rounded-xl bg-[#252B38] text-white text-sm font-medium">
             Cancel
           </button>
           <button onClick={handleSave}
             className="flex-1 py-3 rounded-xl text-[#0D0F14] text-sm font-semibold bg-[#38BDF8] hover:bg-[#7DD3FC] transition-colors">
-            Save Week {weekNum} onwards
+            Save from Week {weekNum}
           </button>
         </div>
       </div>
@@ -199,8 +175,8 @@ function DetailModal({ session, date, activities, onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end" onClick={onClose}>
-      <div className="w-full max-w-lg mx-auto bg-[#161A23] rounded-t-3xl p-6 pb-10 border-t border-[#252B38]"
+    <div className="fixed inset-0 z-50 bg-black/60" onClick={onClose}>
+      <div className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#161A23] rounded-t-3xl p-6 pb-8 border-t border-[#252B38]"
            onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-5" />
         <div className="flex items-center gap-3 mb-4">
@@ -215,11 +191,11 @@ function DetailModal({ session, date, activities, onClose }) {
             </p>
           </div>
         </div>
-        {session.desc && !['rest'].includes(session.discipline) && (
+        {session.desc && session.discipline !== 'rest' && (
           <p className="text-[#9CA3AF] text-sm mb-4 leading-relaxed">{session.desc}</p>
         )}
         {actForDay ? (
-          <div className="bg-[#4ADE80]/10 border border-[#4ADE80]/30 rounded-xl p-4">
+          <div className="bg-[#4ADE80]/10 border border-[#4ADE80]/30 rounded-xl p-4 mb-4">
             <p className="text-[#4ADE80] font-semibold text-sm mb-1">✅ Completed</p>
             <p className="text-[#9CA3AF] text-sm">
               {actForDay.distance_m >= 1000
@@ -230,14 +206,14 @@ function DetailModal({ session, date, activities, onClose }) {
             </p>
           </div>
         ) : (
-          <div className="bg-[#252B38]/50 rounded-xl p-4 text-center">
+          <div className="bg-[#252B38]/50 rounded-xl p-4 text-center mb-4">
             <p className="text-[#6B7280] text-sm">
               {session.discipline === 'rest' ? 'Rest day — no session required' : 'Not logged yet'}
             </p>
           </div>
         )}
         <button onClick={onClose}
-          className="w-full mt-4 py-3 rounded-xl bg-[#252B38] text-white text-sm font-medium">
+          className="w-full py-3 rounded-xl bg-[#252B38] text-white text-sm font-medium">
           Close
         </button>
       </div>
@@ -326,7 +302,6 @@ export default function WeeklyPlan() {
                 ${isRest ? 'opacity-50 cursor-default' : 'hover:border-opacity-60'}
                 ${isToday ? 'border-[#38BDF8]' : done ? 'border-[#4ADE80]/40' : 'border-[#252B38]'}`}>
               <div className="flex items-center gap-3">
-                {/* Day pill */}
                 <div className={`w-12 flex-shrink-0 rounded-lg py-2 text-center
                   ${isToday ? 'bg-[#38BDF8]/10' : 'bg-[#0D0F14]'}`}>
                   <p className={`text-[10px] uppercase tracking-wider font-medium
@@ -338,14 +313,10 @@ export default function WeeklyPlan() {
                     {session.date.getDate()}
                   </p>
                 </div>
-
-                {/* Discipline icon */}
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                   style={{ backgroundColor: `${color}22`, opacity: isPast && !done && !isRest ? 0.5 : 1 }}>
                   {DISCIPLINE_ICON[session.discipline]}
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className={`font-semibold text-sm truncate
                     ${isPast && !done && !isRest ? 'text-[#4B5563]' : 'text-white'}`}>
@@ -355,8 +326,6 @@ export default function WeeklyPlan() {
                     <p className="text-xs text-[#6B7280] mt-0.5 truncate">{session.desc}</p>
                   )}
                 </div>
-
-                {/* Status */}
                 <div className="flex-shrink-0">
                   {done ? (
                     <span className="text-[#4ADE80] text-lg">✓</span>
@@ -372,7 +341,6 @@ export default function WeeklyPlan() {
         })}
       </div>
 
-      {/* Detail modal */}
       {detail && (
         <DetailModal
           session={detail.session}
@@ -382,7 +350,6 @@ export default function WeeklyPlan() {
         />
       )}
 
-      {/* Edit week modal */}
       {editingWeek && (
         <EditWeekModal
           sessions={sessions}
