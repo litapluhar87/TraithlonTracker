@@ -102,15 +102,26 @@ export default function Progress() {
   // Chart: pace trend line
   const paceData = sessions.map(s => ({
     name: s.label,
-    pace: tab === 'bike' ? s.pace?.toFixed(1) : s.pace ? parseFloat((s.pace/60).toFixed(2)) : null,
+    pace: tab === 'bike'
+      ? (s.pace ? parseFloat(s.pace.toFixed(1)) : null)
+      : (s.pace ? parseFloat((s.pace / 60).toFixed(2)) : null),
   })).filter(d => d.pace !== null);
 
-  // Target line on pace chart
-  const targetPaceDisplay = tab === 'swim'
-    ? (config.target_pace_s / 60).toFixed(2)
-    : tab === 'bike'
-    ? config.target_speed_kmh.toFixed(1)
-    : (config.target_pace_s / 60).toFixed(2);
+  // Target line on pace chart — always a number, never a string
+  const targetPaceValue = tab === 'bike'
+    ? config.target_speed_kmh
+    : config.target_pace_s / 60;
+
+  // Y-axis domain must include both the data range AND the target line,
+  // otherwise Recharts auto-scales to just the data and clips the ReferenceLine.
+  const paceValues = paceData.map(d => d.pace).concat([targetPaceValue]);
+  const paceMin = Math.min(...paceValues);
+  const paceMax = Math.max(...paceValues);
+  const padding = (paceMax - paceMin) * 0.15 || 1;
+  const yDomain = [
+    Math.max(0, paceMin - padding),
+    paceMax + padding,
+  ];
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -192,9 +203,9 @@ export default function Progress() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#252B38" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false}
-                    reversed={tab !== 'bike'} />
+                    reversed={tab !== 'bike'} domain={yDomain} />
                   <Tooltip content={<CustomTooltip unit={paceLabel} />} />
-                  <ReferenceLine y={parseFloat(targetPaceDisplay)} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.6} />
+                  <ReferenceLine y={targetPaceValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.7} strokeWidth={1.5} />
                   <Line type="monotone" dataKey="pace" stroke={color}
                     strokeWidth={2.5} dot={{ fill: color, r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
