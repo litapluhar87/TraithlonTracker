@@ -17,32 +17,58 @@ const DISCIPLINES = [
 
 const FEEL_EMOJI = ['😓', '😐', '🙂', '😊', '🔥'];
 
-// Duration input component — accepts mm:ss
+// Duration input — separate HH MM SS fields, mobile-friendly numeric pad
 function DurationInput({ label, value, onChange }) {
-  const [raw, setRaw] = useState(value || '');
-  const handleBlur = () => {
-    // Auto-format: if user types "4530" → "45:30"
-    const digits = raw.replace(/\D/g, '');
-    if (digits.length >= 3) {
-      const mins = digits.slice(0, digits.length - 2);
-      const secs = digits.slice(-2);
-      const formatted = `${parseInt(mins)}:${secs.padStart(2,'0')}`;
-      setRaw(formatted);
-      onChange(formatted);
-    }
+  // Parse incoming hh:mm:ss or mm:ss string into parts
+  const parse = (v) => {
+    if (!v) return { h: '', m: '', s: '' };
+    const parts = v.split(':').map(p => p.replace(/^0+/, '') || '');
+    if (parts.length === 3) return { h: parts[0], m: parts[1], s: parts[2] };
+    if (parts.length === 2) return { h: '',       m: parts[0], s: parts[1] };
+    return { h: '', m: '', s: '' };
   };
+
+  const init = parse(value);
+  const [h, setH] = useState(init.h);
+  const [m, setM] = useState(init.m);
+  const [s, setS] = useState(init.s);
+
+  const emit = (hv, mv, sv) => {
+    const hh = parseInt(hv) || 0;
+    const mm = parseInt(mv) || 0;
+    const ss = parseInt(sv) || 0;
+    if (hh === 0 && mm === 0 && ss === 0) { onChange(''); return; }
+    onChange(`${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`);
+  };
+
+  const fieldClass = "w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-2 py-3 text-white font-mono text-center text-lg placeholder-[#374151] focus:border-[#38BDF8] transition-colors";
+
   return (
     <div>
       <label className="block text-xs uppercase tracking-widest text-[#6B7280] mb-2">{label}</label>
-      <input
-        type="text"
-        inputMode="numeric"
-        value={raw}
-        onChange={e => { setRaw(e.target.value); onChange(e.target.value); }}
-        onBlur={handleBlur}
-        placeholder="mm:ss"
-        className="w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white font-mono placeholder-[#374151] focus:border-[#38BDF8] transition-colors"
-      />
+      <div className="grid grid-cols-3 gap-2 items-center">
+        <div className="text-center">
+          <input type="number" inputMode="numeric" min="0" max="23"
+            value={h} placeholder="0"
+            onChange={e => { setH(e.target.value); emit(e.target.value, m, s); }}
+            className={fieldClass} />
+          <p className="text-[10px] text-[#6B7280] mt-1">HH</p>
+        </div>
+        <div className="text-center">
+          <input type="number" inputMode="numeric" min="0" max="59"
+            value={m} placeholder="00"
+            onChange={e => { setM(e.target.value); emit(h, e.target.value, s); }}
+            className={fieldClass} />
+          <p className="text-[10px] text-[#6B7280] mt-1">MM</p>
+        </div>
+        <div className="text-center">
+          <input type="number" inputMode="numeric" min="0" max="59"
+            value={s} placeholder="00"
+            onChange={e => { setS(e.target.value); emit(h, m, e.target.value); }}
+            className={fieldClass} />
+          <p className="text-[10px] text-[#6B7280] mt-1">SS</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -282,7 +308,7 @@ export default function LogSession() {
             <input type="number" value={swimDist} onChange={e => setSwimDist(e.target.value)}
               placeholder="e.g. 1500" className={inputClass} />
           </div>
-          <DurationInput label="Duration (mm:ss)" value={swimDur} onChange={setSwimDur} />
+          <DurationInput label="Duration" value={swimDur} onChange={setSwimDur} />
           <MetricsCard discipline="swim" distanceM={parseFloat(swimDist)||0} durationS={parseDuration(swimDur)} />
         </div>
       )}
@@ -300,7 +326,7 @@ export default function LogSession() {
             <input type="number" step="0.1" value={bikeDist} onChange={e => setBikeDist(e.target.value)}
               placeholder="e.g. 40" className={inputClass} />
           </div>
-          <DurationInput label="Duration (mm:ss)" value={bikeDur} onChange={setBikeDur} />
+          <DurationInput label="Duration" value={bikeDur} onChange={setBikeDur} />
           <div>
             <label className={labelClass}>Elevation (m) — optional</label>
             <input type="number" value={bikeElev} onChange={e => setBikeElev(e.target.value)}
@@ -323,7 +349,7 @@ export default function LogSession() {
             <input type="number" step="0.1" value={runDist} onChange={e => setRunDist(e.target.value)}
               placeholder="e.g. 10" className={inputClass} />
           </div>
-          <DurationInput label="Duration (mm:ss)" value={runDur} onChange={setRunDur} />
+          <DurationInput label="Duration" value={runDur} onChange={setRunDur} />
           <MetricsCard discipline="run" distanceM={(parseFloat(runDist)||0)*1000} durationS={parseDuration(runDur)} />
         </div>
       )}
@@ -337,14 +363,14 @@ export default function LogSession() {
             <input type="number" step="0.1" value={brickBikeDist} onChange={e => setBrickBikeDist(e.target.value)}
               placeholder="e.g. 20" className={inputClass} />
           </div>
-          <DurationInput label="Duration (mm:ss)" value={brickBikeDur} onChange={setBrickBikeDur} />
+          <DurationInput label="Duration" value={brickBikeDur} onChange={setBrickBikeDur} />
           <p className="text-xs text-[#6B7280] uppercase tracking-widest pt-2">Run Leg</p>
           <div>
             <label className={labelClass}>Distance (km)</label>
             <input type="number" step="0.1" value={brickRunDist} onChange={e => setBrickRunDist(e.target.value)}
               placeholder="e.g. 5" className={inputClass} />
           </div>
-          <DurationInput label="Duration (mm:ss)" value={brickRunDur} onChange={setBrickRunDur} />
+          <DurationInput label="Duration" value={brickRunDur} onChange={setBrickRunDur} />
           <DurationInput label="Transition Time (mm:ss) — optional" value={brickTransition} onChange={setBrickTransition} />
         </div>
       )}

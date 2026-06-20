@@ -16,6 +16,15 @@ const DISCIPLINE_ICON = {
 };
 const DISCIPLINES = ['swim', 'bike', 'run', 'gym', 'brick', 'rest'];
 
+const DISCIPLINE_DEFAULTS = {
+  swim:  { name: 'Swim Session',  desc: 'Focus on stroke efficiency, drills and race-pace intervals.' },
+  bike:  { name: 'Bike Session',  desc: 'Steady aerobic pace. Keep HR in Zone 2.' },
+  run:   { name: 'Run Session',   desc: 'Easy conversational pace or speed intervals per plan.' },
+  gym:   { name: 'Gym Session',   desc: 'Strength and conditioning session.' },
+  brick: { name: 'Brick Session', desc: 'Bike immediately followed by run. Practice transition.' },
+  rest:  { name: 'Rest Day',      desc: '' },
+};
+
 const DEFAULT_SESSIONS = [
   { offset: 0, discipline: 'swim',  name: 'Quality Swim',        desc: 'Drills + race-pace intervals. Focus on stroke efficiency.' },
   { offset: 1, discipline: 'run',   name: 'Speed Intervals',     desc: '15min warmup + 6–8×800m or 5×1km at 5K pace.' },
@@ -32,8 +41,7 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
     sessions.map(s => ({
       offset:     s.offset,
       discipline: s.discipline,
-      name:       s.name,
-      desc:       s.desc || '',
+      customName: s.name !== (DISCIPLINE_DEFAULTS[s.discipline]?.name || '') ? s.name : '',
     }))
   );
 
@@ -41,21 +49,23 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
     setRows(prev => prev.map((r, idx) => {
       if (idx !== i) return r;
       const updated = { ...r, [field]: value };
-      if (field === 'discipline' && value === 'rest') {
-        updated.name = 'Rest Day'; updated.desc = '';
-      }
-      if (field === 'discipline' && value !== 'rest' && r.discipline === 'rest') {
-        updated.name = DEFAULT_SESSIONS[i].name;
-        updated.desc = DEFAULT_SESSIONS[i].desc || '';
+      // Switching discipline resets to that discipline's default name
+      if (field === 'discipline') {
+        updated.customName = '';
       }
       return updated;
     }));
   };
 
   const handleSave = () => {
-    rows.forEach(row => savePlanOverride(row.offset, weekNum, {
-      discipline: row.discipline, name: row.name, desc: row.desc,
-    }));
+    rows.forEach(row => {
+      const defaultName = DISCIPLINE_DEFAULTS[row.discipline]?.name || '';
+      savePlanOverride(row.offset, weekNum, {
+        discipline: row.discipline,
+        name: row.customName.trim() || defaultName,
+        customName: row.customName.trim(),
+      });
+    });
     onSave(); onClose();
   };
 
@@ -72,27 +82,31 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
         className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#161A23] rounded-t-3xl border-t border-[#252B38]"
         onClick={e => e.stopPropagation()}
       >
-        {/* Handle + Header */}
-        <div className="px-6 pt-5 pb-4">
-          <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-4" />
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-white text-lg">Edit Plan</h3>
-              <p className="text-xs text-[#6B7280] mt-0.5">
-                {weekDates[0].toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
-                {' – '}
-                {weekDates[6].toLocaleDateString('en-IN', { day:'numeric', month:'short' })}
-              </p>
+        {/* Sticky header with buttons */}
+        <div className="px-4 pt-4 pb-3 border-b border-[#252B38] sticky top-0 bg-[#161A23] z-10">
+          <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-3" />
+          <div className="flex items-center gap-2">
+            <button onClick={onClose}
+              className="px-3 py-1.5 rounded-lg bg-[#252B38] text-white text-xs font-medium">
+              Cancel
+            </button>
+            <div className="flex-1 text-center">
+              <p className="text-sm font-bold text-white">Edit Plan</p>
+              <p className="text-[10px] text-[#6B7280]">Week {weekNum} onwards</p>
             </div>
             {hasAnyOverride && (
               <button onClick={handleResetAll}
-                className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#F87171] transition-colors">
-                <RotateCcw size={12} /> Reset all
+                className="px-3 py-1.5 rounded-lg bg-[#252B38] text-[#F87171] text-xs font-medium">
+                Reset
               </button>
             )}
+            <button onClick={handleSave}
+              className="px-3 py-1.5 rounded-lg bg-[#38BDF8] text-[#0D0F14] text-xs font-semibold">
+              Save
+            </button>
           </div>
-          <p className="text-xs text-[#38BDF8] bg-[#38BDF8]/10 rounded-xl px-3 py-2 mt-3">
-            Changes apply from Week {weekNum} onwards. Earlier weeks unchanged.
+          <p className="text-[10px] text-[#38BDF8] mt-2 text-center">
+            Changes apply from Week {weekNum} onwards · earlier weeks unchanged
           </p>
         </div>
 
@@ -132,19 +146,17 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
                       </button>
                     ))}
                   </div>
-                  {/* Name + desc */}
+                  {/* Optional custom name — defaults to discipline name if left blank */}
                   {!isRest && (
-                    <div className="space-y-2">
-                      <input type="text" value={row.name}
-                        onChange={e => updateRow(i, 'name', e.target.value)}
-                        placeholder="Session name"
-                        className="w-full bg-[#161A23] border border-[#252B38] rounded-lg px-3 py-2 text-white text-sm focus:border-[#38BDF8] transition-colors" />
-                      <textarea value={row.desc}
-                        onChange={e => updateRow(i, 'desc', e.target.value)}
-                        placeholder="Description (optional)"
-                        rows={2}
-                        className="w-full bg-[#161A23] border border-[#252B38] rounded-lg px-3 py-2 text-white text-sm focus:border-[#38BDF8] transition-colors resize-none" />
-                    </div>
+                    <input type="text" value={row.customName}
+                      onChange={e => updateRow(i, 'customName', e.target.value)}
+                      placeholder={DISCIPLINE_DEFAULTS[row.discipline]?.name || 'Session name'}
+                      className="w-full bg-[#161A23] border border-[#252B38] rounded-lg px-3 py-2 text-white text-sm focus:border-[#38BDF8] transition-colors" />
+                  )}
+                  {!isRest && (
+                    <p className="text-[10px] text-[#6B7280] mt-1.5 px-1">
+                      {DISCIPLINE_DEFAULTS[row.discipline]?.desc}
+                    </p>
                   )}
                 </div>
               );
@@ -152,17 +164,8 @@ function EditWeekModal({ sessions, weekNum, weekDates, onSave, onClose }) {
           </div>
         </div>
 
-        {/* Footer — always visible, never scrolls */}
-        <div className="px-6 pt-3 pb-6 border-t border-[#252B38] flex gap-3">
-          <button onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-[#252B38] text-white text-sm font-medium">
-            Cancel
-          </button>
-          <button onClick={handleSave}
-            className="flex-1 py-3 rounded-xl text-[#0D0F14] text-sm font-semibold bg-[#38BDF8] hover:bg-[#7DD3FC] transition-colors">
-            Save from Week {weekNum}
-          </button>
-        </div>
+        {/* Bottom padding */}
+        <div className="h-6" />
       </div>
     </div>
   );
@@ -178,6 +181,11 @@ function DetailModal({ session, date, activities, onClose }) {
     <div className="fixed inset-0 z-50 bg-black/60" onClick={onClose}>
       <div className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#161A23] rounded-t-3xl p-6 pb-8 border-t border-[#252B38]"
            onClick={e => e.stopPropagation()}>
+        {/* X close button */}
+        <button onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#252B38] flex items-center justify-center text-[#F87171] hover:bg-[#F87171]/20 transition-colors">
+          ✕
+        </button>
         <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-5" />
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
@@ -195,7 +203,7 @@ function DetailModal({ session, date, activities, onClose }) {
           <p className="text-[#9CA3AF] text-sm mb-4 leading-relaxed">{session.desc}</p>
         )}
         {actForDay ? (
-          <div className="bg-[#4ADE80]/10 border border-[#4ADE80]/30 rounded-xl p-4 mb-4">
+          <div className="bg-[#4ADE80]/10 border border-[#4ADE80]/30 rounded-xl p-4">
             <p className="text-[#4ADE80] font-semibold text-sm mb-1">✅ Completed</p>
             <p className="text-[#9CA3AF] text-sm">
               {actForDay.distance_m >= 1000
@@ -206,16 +214,10 @@ function DetailModal({ session, date, activities, onClose }) {
             </p>
           </div>
         ) : (
-          <div className="bg-[#252B38]/50 rounded-xl p-4 text-center mb-4">
-            <p className="text-[#6B7280] text-sm">
-              {session.discipline === 'rest' ? 'Rest day — no session required' : 'Not logged yet'}
-            </p>
-          </div>
+          <p className="text-[#6B7280] text-sm text-center py-4">
+            {session.discipline === 'rest' ? 'Rest day — no session required' : 'Not logged yet'}
+          </p>
         )}
-        <button onClick={onClose}
-          className="w-full py-3 rounded-xl bg-[#252B38] text-white text-sm font-medium">
-          Close
-        </button>
       </div>
     </div>
   );
@@ -228,15 +230,25 @@ export default function WeeklyPlan() {
   const [week,        setWeek]        = useState(currentWeek());
   const [detail,      setDetail]      = useState(null);
   const [editingWeek, setEditingWeek] = useState(false);
-  const [, forceUpdate]               = useState(0);
+  const [overrideVersion, setOverrideVersion] = useState(0);
   const today = new Date();
   const weekDates = getWeekDates(week);
+  // Re-read overrides fresh every render — overrideVersion bump guarantees re-render
   const overrides = getPlanOverrides();
 
-  const sessions = DEFAULT_SESSIONS.map((s, i) => ({
-    ...resolveSession(s, week),
-    date: weekDates[i],
-  }));
+  const sessions = DEFAULT_SESSIONS.map((s, i) => {
+    const resolved = resolveSession(s, week);
+    const wasOverridden = resolved.discipline !== s.discipline; // discipline changed via Edit Plan
+    const defaults = DISCIPLINE_DEFAULTS[resolved.discipline] || { name: '', desc: '' };
+    return {
+      ...resolved,
+      // Only fall back to generic discipline name/desc when the discipline itself was changed.
+      // Untouched days keep their curated plan name + description.
+      name: wasOverridden ? ((resolved.customName && resolved.customName.trim()) || defaults.name) : resolved.name,
+      desc: wasOverridden ? defaults.desc : resolved.desc,
+      date: weekDates[i],
+    };
+  });
 
   const isComplete = (date, discipline) => {
     if (discipline === 'rest') return false;
@@ -355,7 +367,7 @@ export default function WeeklyPlan() {
           sessions={sessions}
           weekNum={week}
           weekDates={weekDates}
-          onSave={() => forceUpdate(n => n + 1)}
+          onSave={() => setOverrideVersion(v => v + 1)}
           onClose={() => setEditingWeek(false)}
         />
       )}
