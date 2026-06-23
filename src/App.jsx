@@ -2,11 +2,8 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import BottomNav from './components/BottomNav';
 import Login from './screens/Login';
-import Dashboard from './screens/Dashboard';
-import WeeklyPlan from './screens/WeeklyPlan';
 import LogSession from './screens/LogSession';
 import Progress from './screens/Progress';
-import Overview from './screens/Overview';
 import Settings from './screens/Settings';
 
 function ProtectedRoute({ children }) {
@@ -20,14 +17,12 @@ function AppShell() {
   return (
     <div className="min-h-screen bg-[#0D0F14] text-white">
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/plan" element={<ProtectedRoute><WeeklyPlan /></ProtectedRoute>} />
+        <Route path="/login" element={user ? <Navigate to="/log" replace /> : <Login />} />
+        <Route path="/" element={<Navigate to="/log" replace />} />
         <Route path="/log" element={<ProtectedRoute><LogSession /></ProtectedRoute>} />
         <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
-        <Route path="/overview" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/log" replace />} />
       </Routes>
       {user && <BottomNav />}
     </div>

@@ -5,11 +5,18 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { formatPace, formatDuration, calcSwim, calcBike, calcRun, RACE_CONFIG } from '../utils/raceConfig';
+import { BarChart3, LineChart as LineIcon } from 'lucide-react';
 
 const TABS = [
   { key: 'swim', label: 'Swim', color: '#38BDF8', icon: '🏊' },
   { key: 'bike', label: 'Bike', color: '#F97316', icon: '🚴' },
   { key: 'run',  label: 'Run',  color: '#4ADE80', icon: '🏃' },
+];
+
+const METRICS = [
+  { key: 'pace',         label: 'Pace / Speed' },
+  { key: 'volume',       label: 'Volume' },
+  { key: 'extrapolated', label: 'Extrapolated' },
 ];
 
 function CustomTooltip({ active, payload, label, unit }) {
@@ -39,9 +46,10 @@ function StatCard({ label, value, sub, color }) {
 export default function Progress() {
   const { activities } = useApp();
   const [tab, setTab] = useState('swim');
+  const [metric, setMetric] = useState('pace');     // pace | volume | extrapolated
+  const [chartType, setChartType] = useState('line'); // bar | line
   const activeTab = TABS.find(t => t.key === tab);
 
-  // Filter and compute metrics
   const sessionsRaw = useMemo(() =>
     activities
       .filter(a => a.type === tab)
@@ -50,21 +58,21 @@ export default function Progress() {
   );
 
   const sessions = useMemo(() => sessionsRaw.map(a => {
-    let pace = null, extrapolated = null, onTrack = false;
+    let pace = null, extrapolated_s = null, onTrack = false;
     if (tab === 'swim') {
       const m = calcSwim(a.distance_m, a.duration_s);
-      pace = m?.pace_s; extrapolated = m?.extrapolated_s; onTrack = m?.onTrack;
+      pace = m?.pace_s; extrapolated_s = m?.extrapolated_s; onTrack = m?.onTrack;
     } else if (tab === 'bike') {
       const m = calcBike(a.distance_m, a.duration_s);
-      pace = m?.speed_kmh; extrapolated = m?.extrapolated_s; onTrack = m?.onTrack;
+      pace = m?.speed_kmh; extrapolated_s = m?.extrapolated_s; onTrack = m?.onTrack;
     } else if (tab === 'run') {
       const m = calcRun(a.distance_m, a.duration_s);
-      pace = m?.pace_s; extrapolated = m?.extrapolated_s; onTrack = m?.onTrack;
+      pace = m?.pace_s; extrapolated_s = m?.extrapolated_s; onTrack = m?.onTrack;
     }
     return {
       ...a,
       dist_display: tab === 'swim' ? a.distance_m : (a.distance_m / 1000),
-      pace, extrapolated, onTrack,
+      pace, extrapolated_s, onTrack,
       label: new Date(a.start_date).toLocaleDateString('en-IN', { day:'numeric', month:'short' }),
     };
   }), [sessionsRaw, tab]);
@@ -93,48 +101,63 @@ export default function Progress() {
     return formatPace(v);
   };
 
-  // Chart: volume bars (distance per session)
+  // ── Chart data per metric ──────────────────────────────────────────────────
   const volumeData = sessions.map(s => ({
     name: s.label,
-    dist: parseFloat(s.dist_display.toFixed(1)),
+    value: parseFloat(s.dist_display.toFixed(1)),
   }));
 
-  // Chart: pace trend line
   const paceData = sessions.map(s => ({
     name: s.label,
-    pace: tab === 'bike'
+    value: tab === 'bike'
       ? (s.pace ? parseFloat(s.pace.toFixed(1)) : null)
       : (s.pace ? parseFloat((s.pace / 60).toFixed(2)) : null),
-  })).filter(d => d.pace !== null);
+  })).filter(d => d.value !== null);
 
-  // Target line on pace chart — always a number, never a string
-  const targetPaceValue = tab === 'bike'
-    ? config.target_speed_kmh
-    : config.target_pace_s / 60;
+  // Extrapolated race time in minutes (easier to read on axis than raw seconds)
+  const extrapData = sessions.map(s => ({
+    name: s.label,
+    value: s.extrapolated_s ? parseFloat((s.extrapolated_s / 60).toFixed(1)) : null,
+    onTrack: s.onTrack,
+  })).filter(d => d.value !== null);
 
-  // Y-axis domain must include both the data range AND the target line,
-  // otherwise Recharts auto-scales to just the data and clips the ReferenceLine.
-  const paceValues = paceData.map(d => d.pace).concat([targetPaceValue]);
-  const paceMin = Math.min(...paceValues);
-  const paceMax = Math.max(...paceValues);
-  const padding = (paceMax - paceMin) * 0.15 || 1;
-  const yDomain = [
-    Math.max(0, paceMin - padding),
-    paceMax + padding,
-  ];
+  const targetPaceValue = tab === 'bike' ? config.target_speed_kmh : config.target_pace_s / 60;
+  const targetExtrapValue = config.target_s / 60; // target race time in minutes
+
+  // Pick active dataset + reference line value + unit label based on metric
+  let chartData, refLineValue, unitLabel, valueColor;
+  if (metric === 'volume') {
+    chartData = volumeData; refLineValue = null; unitLabel = distLabel; valueColor = color;
+  } else if (metric === 'extrapolated') {
+    chartData = extrapData; refLineValue = targetExtrapValue; unitLabel = 'min'; valueColor = color;
+  } else {
+    chartData = paceData; refLineValue = targetPaceValue; unitLabel = paceLabel; valueColor = color;
+  }
+
+  // Y domain — always include reference line + data with padding
+  const yDomain = useMemo(() => {
+    const vals = chartData.map(d => d.value).filter(v => v !== null);
+    if (refLineValue !== null) vals.push(refLineValue);
+    if (!vals.length) return undefined;
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const pad = (max - min) * 0.15 || 1;
+    return [Math.max(0, min - pad), max + pad];
+  }, [chartData, refLineValue]);
+
+  const reverseAxis = metric === 'pace' && tab !== 'bike'; // lower pace = better, show improvement going up
+  // For extrapolated time, lower is also better — reverse too, except keep simple: reverse for both pace and extrapolated except bike speed
+  const shouldReverse = (metric === 'pace' || metric === 'extrapolated') && tab !== 'bike';
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold text-white mb-6">Progress</h1>
 
-      {/* Tab bar */}
-      <div className="flex gap-2 mb-6">
+      {/* Discipline tabs */}
+      <div className="flex gap-2 mb-4">
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)}
             className={`flex-1 py-3 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2
-              ${tab === t.key
-                ? 'text-[#0D0F14]'
-                : 'border-[#252B38] bg-[#161A23] text-[#6B7280] hover:text-[#9CA3AF]'}`}
+              ${tab === t.key ? 'text-[#0D0F14]' : 'border-[#252B38] bg-[#161A23] text-[#6B7280] hover:text-[#9CA3AF]'}`}
             style={tab === t.key ? { backgroundColor: t.color, borderColor: t.color } : {}}>
             <span>{t.icon}</span>
             <span>{t.label}</span>
@@ -151,67 +174,96 @@ export default function Progress() {
       ) : (
         <>
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <StatCard
-              label="Sessions"
-              value={sessions.length}
-              sub={`${totalDist.toFixed(1)} ${distLabel} total`}
-              color={color}
-            />
-            <StatCard
-              label={tab === 'bike' ? 'Avg Speed' : 'Avg Pace'}
-              value={formatPaceDisplay(avgPace)}
-              sub={paceLabel}
-              color={color}
-            />
-            <StatCard
-              label={tab === 'bike' ? 'Best Speed' : 'Best Pace'}
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            <StatCard label="Sessions" value={sessions.length}
+              sub={`${totalDist.toFixed(1)} ${distLabel} total`} color={color} />
+            <StatCard label={tab === 'bike' ? 'Avg Speed' : 'Avg Pace'}
+              value={formatPaceDisplay(avgPace)} sub={paceLabel} color={color} />
+            <StatCard label={tab === 'bike' ? 'Best Speed' : 'Best Pace'}
               value={formatPaceDisplay(best)}
               sub={lastOnTrack === true ? '✅ On track' : lastOnTrack === false ? '⚠️ Behind' : ''}
-              color={lastOnTrack === true ? '#4ADE80' : lastOnTrack === false ? '#F87171' : color}
-            />
+              color={lastOnTrack === true ? '#4ADE80' : lastOnTrack === false ? '#F87171' : color} />
           </div>
 
-          {/* Volume chart */}
+          {/* Metric selector: Pace/Speed | Volume | Extrapolated */}
+          <div className="flex gap-2 mb-3">
+            {METRICS.map(m => (
+              <button key={m.key} onClick={() => setMetric(m.key)}
+                className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all
+                  ${metric === m.key
+                    ? 'border-[#38BDF8]/40 text-[#38BDF8] bg-[#38BDF8]/10'
+                    : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Chart type toggle: bar | line */}
+          <div className="flex items-center justify-end gap-1.5 mb-3">
+            <button onClick={() => setChartType('bar')}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                ${chartType === 'bar' ? 'bg-[#252B38] text-white' : 'text-[#4B5563] hover:text-[#9CA3AF]'}`}>
+              <BarChart3 size={15} />
+            </button>
+            <button onClick={() => setChartType('line')}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                ${chartType === 'line' ? 'bg-[#252B38] text-white' : 'text-[#4B5563] hover:text-[#9CA3AF]'}`}>
+              <LineIcon size={15} />
+            </button>
+          </div>
+
+          {/* Main chart card */}
           <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-4 mb-4">
-            <p className="text-xs uppercase tracking-widest text-[#6B7280] mb-4">Distance per Session</p>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={volumeData} barSize={20}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#252B38" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip unit={distLabel} />} />
-                <Bar dataKey="dist" fill={color} radius={[4,4,0,0]} fillOpacity={0.85} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Pace trend chart */}
-          {paceData.length >= 2 && (
-            <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs uppercase tracking-widest text-[#6B7280]">
-                  {tab === 'bike' ? 'Speed Trend' : 'Pace Trend'}
-                </p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs uppercase tracking-widest text-[#6B7280]">
+                {METRICS.find(m => m.key === metric)?.label}
+                {metric === 'extrapolated' && ` · ${tab === 'swim' ? '1500m' : tab === 'bike' ? '40km' : '10km'}`}
+              </p>
+              {metric === 'extrapolated' && (
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-[#F87171] opacity-60" />
+                  <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
+                  <p className="text-[10px] text-[#6B7280]">Target {formatDuration(targetExtrapValue * 60)}</p>
+                </div>
+              )}
+              {metric === 'pace' && (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
                   <p className="text-[10px] text-[#6B7280]">Target</p>
                 </div>
-              </div>
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChart data={paceData}>
+              )}
+            </div>
+
+            <ResponsiveContainer width="100%" height={200}>
+              {chartType === 'bar' ? (
+                <BarChart data={chartData} barSize={20}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#252B38" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false}
-                    reversed={tab !== 'bike'} domain={yDomain} />
-                  <Tooltip content={<CustomTooltip unit={paceLabel} />} />
-                  <ReferenceLine y={targetPaceValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.7} strokeWidth={1.5} />
-                  <Line type="monotone" dataKey="pace" stroke={color}
-                    strokeWidth={2.5} dot={{ fill: color, r: 4 }} activeDot={{ r: 6 }} />
+                    domain={metric === 'volume' ? undefined : yDomain}
+                    reversed={metric === 'volume' ? false : shouldReverse} />
+                  <Tooltip content={<CustomTooltip unit={unitLabel} />} />
+                  {refLineValue !== null && metric !== 'volume' && (
+                    <ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
+                  )}
+                  <Bar dataKey="value" fill={valueColor} radius={[4,4,0,0]} fillOpacity={0.85} />
+                </BarChart>
+              ) : (
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#252B38" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false}
+                    domain={metric === 'volume' ? undefined : yDomain}
+                    reversed={metric === 'volume' ? false : shouldReverse} />
+                  <Tooltip content={<CustomTooltip unit={unitLabel} />} />
+                  {refLineValue !== null && metric !== 'volume' && (
+                    <ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
+                  )}
+                  <Line type="monotone" dataKey="value" stroke={valueColor}
+                    strokeWidth={2.5} dot={{ fill: valueColor, r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+              )}
+            </ResponsiveContainer>
+          </div>
 
           {/* Session history */}
           <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-4">
@@ -230,7 +282,7 @@ export default function Progress() {
                       {formatPaceDisplay(s.pace)} <span className="text-xs text-[#6B7280]">{paceLabel}</span>
                     </p>
                     <p className={`text-xs ${s.onTrack ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
-                      {s.onTrack ? '✅ on track' : '⚠️ behind'}
+                      {s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
                     </p>
                   </div>
                 </div>

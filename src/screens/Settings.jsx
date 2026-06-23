@@ -8,15 +8,14 @@ export default function Settings() {
 
   const cfg = getPlanConfig();
   const [startDate, setStartDate] = useState(cfg.startStr);
-  const [endDate,   setEndDate]   = useState(cfg.endStr);
   const [raceDate,  setRaceDate]  = useState(cfg.raceStr);
   const [saved, setSaved] = useState(false);
 
   // Live preview of calculated weeks
   const calcWeeks = () => {
-    if (!startDate || !endDate) return null;
+    if (!startDate || !raceDate) return null;
     const s = new Date(startDate + 'T00:00:00');
-    const r = new Date(endDate   + 'T00:00:00');
+    const r = new Date(raceDate  + 'T00:00:00');
     if (r <= s) return null;
     const diffDays = Math.ceil((r - s) / (1000 * 60 * 60 * 24));
     return Math.ceil(diffDays / 7);
@@ -28,13 +27,12 @@ export default function Settings() {
   };
 
   const weeks = calcWeeks();
-  const isValid = weeks !== null && weeks >= 4 && weeks <= 52 && raceDate > endDate;
+  const isValid = weeks !== null && weeks >= 4 && weeks <= 52;
 
   const handleSave = () => {
     if (!isValid) return;
-	localStorage.setItem('tt_plan_start', startDate);
-	localStorage.setItem('tt_plan_end',   endDate);
-	localStorage.setItem('tt_race_date',  raceDate);
+    localStorage.setItem('tt_plan_start', startDate);
+    localStorage.setItem('tt_race_date',  raceDate);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     // Force a re-render across app by reloading — simplest approach
@@ -51,9 +49,8 @@ export default function Settings() {
 
   const handleClearPlan = () => {
     if (window.confirm('Reset plan dates to default (15 Jun 2026 – 4 Oct 2026)?')) {
-	  localStorage.removeItem('tt_plan_start');
-	  localStorage.removeItem('tt_plan_end');
-	  localStorage.removeItem('tt_race_date');
+      localStorage.removeItem('tt_plan_start');
+      localStorage.removeItem('tt_race_date');
       window.location.reload();
     }
   };
@@ -75,43 +72,22 @@ export default function Settings() {
 
         <div className="space-y-4">
           <div>
-			<label className={labelClass}>Plan Start Date</label>
-			<input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSaved(false); }}
-			  className={inputClass} />
-			{startDate && (
-			  <p className="text-xs text-[#6B7280] mt-1.5">
-			    Week 1 starts on a <span className="text-[#38BDF8]">{startDayName()}</span>
-				{' — that will be Day 1 of the plan'}
-			  </p>
-			)}
-		  </div>
+            <label className={labelClass}>Plan Start Date</label>
+            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSaved(false); }}
+              className={inputClass} />
+            {startDate && (
+              <p className="text-xs text-[#6B7280] mt-1.5">
+                Week 1 starts on a <span className="text-[#38BDF8]">{startDayName()}</span>
+                {' — that will be Day 1 of the plan'}
+              </p>
+            )}
+          </div>
 
-		  <div>
-			<label className={labelClass}>Plan End Date</label>
-			<input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setSaved(false); }}
-			  className={inputClass} />
-			<p className="text-xs text-[#6B7280] mt-1.5">
-			  Last day of tracked training. Taper week follows after this.
-			</p>
-		  </div>
-
-		  <div>
-			<label className={labelClass}>Race Date</label>
-			<input type="date" value={raceDate}
-			  onChange={e => {
-				const newRace = e.target.value;
-				setRaceDate(newRace);
-				setSaved(false);
-				// Auto-set end date to 7 days before race if end date hasn't been manually pushed past that
-				const autoEnd = new Date(newRace + 'T00:00:00');
-				autoEnd.setDate(autoEnd.getDate() - 7);
-				setEndDate(autoEnd.toISOString().split('T')[0]);
-			  }}
-			  className={inputClass} />
-			<p className="text-xs text-[#6B7280] mt-1.5">
-			  Changing Race Date auto-sets End Date to 1 week prior.
-			</p>
-		  </div>
+          <div>
+            <label className={labelClass}>Race Date</label>
+            <input type="date" value={raceDate} onChange={e => { setRaceDate(e.target.value); setSaved(false); }}
+              className={inputClass} />
+          </div>
 
           {/* Live preview */}
           {startDate && raceDate && (
@@ -121,28 +97,22 @@ export default function Settings() {
                 : 'bg-[#F87171]/5 border-[#F87171]/30'
             }`}>
               {isValid ? (
-                <div className="grid grid-cols-2 gap-3 text-center">
-				  <div>
-					<p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Training Weeks</p>
-					<p className="text-2xl font-black font-mono text-[#38BDF8] mt-0.5">{weeks}</p>
-				  </div>
-				  <div>
-				    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Start Day</p>
-				    <p className="text-sm font-bold text-white mt-1">{startDayName()}</p>
-				  </div>
-				  <div>
-					<p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Plan Ends</p>
-					<p className="text-sm font-bold text-white mt-1">
-					  {new Date(endDate + 'T00:00:00').toLocaleDateString('en', { day:'numeric', month:'short' })}
-					</p>
-				  </div>
-				  <div>
-					<p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Race Day</p>
-					<p className="text-sm font-bold text-[#F97316] mt-1">
-					  {new Date(raceDate + 'T00:00:00').toLocaleDateString('en', { day:'numeric', month:'short' })}
-					</p>
-				  </div>
-				</div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Weeks</p>
+                    <p className="text-2xl font-black font-mono text-[#38BDF8] mt-0.5">{weeks}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Start Day</p>
+                    <p className="text-sm font-bold text-white mt-1">{startDayName().slice(0,3)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Race Day</p>
+                    <p className="text-sm font-bold text-white mt-1">
+                      {new Date(raceDate + 'T00:00:00').toLocaleDateString('en', { day:'numeric', month:'short' })}
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <p className="text-[#F87171] text-sm text-center">
                   {weeks === null

@@ -243,7 +243,7 @@ export default function LogSession() {
       // For now, store locally with a temp id
       addActivity({ ...activity, id: Date.now() });
       setSaved(true);
-      setTimeout(() => { setSaved(false); navigate('/'); }, 1200);
+      setTimeout(() => { setSaved(false); navigate('/progress'); }, 1200);
     } catch (e) {
       alert('Failed to save. Backend may not be running.');
     }

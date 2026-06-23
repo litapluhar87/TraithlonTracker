@@ -22,7 +22,7 @@ export default function Login() {
     };
     login(userData);
     setLoading(false);
-    navigate('/');
+    navigate('/log');
   };
 
   const days = daysToRace();
