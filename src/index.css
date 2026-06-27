@@ -4,17 +4,17 @@
 @tailwind utilities;
 
 :root {
-  --swim: #38BDF8;
-  --bike: #F97316;
-  --run: #4ADE80;
+  --swim: #0284C7;
+  --bike: #EA580C;
+  --run: #16A34A;
   --gym: #A78BFA;
 }
 
 * { box-sizing: border-box; }
 
 body {
-  background-color: #0D0F14;
-  color: #E5E7EB;
+  background-color: #FFF8EA;
+  color: #201A14;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
@@ -22,8 +22,8 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0D0F14; }
-::-webkit-scrollbar-thumb { background: #252B38; border-radius: 2px; }
+::-webkit-scrollbar-track { background: #FFF8EA; }
+::-webkit-scrollbar-thumb { background: #D7C4A5; border-radius: 2px; }
 
 /* Number inputs clean */
 input[type=number]::-webkit-inner-spin-button,
@@ -32,5 +32,5 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 /* Focus ring */
 input:focus, select:focus, textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.28);
 }

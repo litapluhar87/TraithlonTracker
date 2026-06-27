@@ -5,18 +5,18 @@ export default {
     extend: {
       colors: {
         race: {
-          dark:    '#0D0F14',
-          panel:   '#161A23',
-          border:  '#252B38',
-          swim:    '#38BDF8',
-          bike:    '#F97316',
-          run:     '#4ADE80',
+          dark:    '#FFF8EA',
+          panel:   '#FFFCF4',
+          border:  '#E6D8BF',
+          swim:    '#0284C7',
+          bike:    '#EA580C',
+          run:     '#16A34A',
           gym:     '#A78BFA',
           brick:   '#FB923C',
-          accent:  '#38BDF8',
-          muted:   '#6B7280',
+          accent:  '#0284C7',
+          muted:   '#7A6B5B',
           danger:  '#F87171',
-          success: '#4ADE80',
+          success: '#16A34A',
         }
       },
       fontFamily: {

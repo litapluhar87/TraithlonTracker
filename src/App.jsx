@@ -15,7 +15,7 @@ function ProtectedRoute({ children }) {
 function AppShell() {
   const { user } = useApp();
   return (
-    <div className="min-h-screen bg-[#0D0F14] text-white">
+    <div className="min-h-screen bg-[#FFF8EA] text-[#201A14]">
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/log" replace /> : <Login />} />
         <Route path="/" element={<Navigate to="/log" replace />} />

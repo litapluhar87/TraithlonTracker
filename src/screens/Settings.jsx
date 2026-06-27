@@ -55,19 +55,19 @@ export default function Settings() {
     }
   };
 
-  const labelClass = "block text-xs uppercase tracking-widest text-[#6B7280] mb-2";
-  const inputClass = "w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white font-mono focus:border-[#38BDF8] transition-colors";
+  const labelClass = "block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2";
+  const inputClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] font-mono focus:border-[#0284C7] transition-colors";
 
   return (
     <div className="pb-28 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold text-white mb-1">Settings</h1>
-      <p className="text-sm text-[#6B7280] mb-6">Logged in as <span className="text-white">{user?.displayName}</span></p>
+      <h1 className="text-xl font-bold text-[#201A14] mb-1">Settings</h1>
+      <p className="text-sm text-[#7A6B5B] mb-6">Logged in as <span className="text-[#201A14]">{user?.displayName}</span></p>
 
       {/* Plan dates */}
-      <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-5 mb-4">
+      <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-5 mb-4">
         <div className="flex items-center gap-2 mb-4">
-          <Calendar size={16} className="text-[#38BDF8]" />
-          <p className="text-sm font-semibold text-white">Training Plan Dates</p>
+          <Calendar size={16} className="text-[#0284C7]" />
+          <p className="text-sm font-semibold text-[#201A14]">Training Plan Dates</p>
         </div>
 
         <div className="space-y-4">
@@ -76,8 +76,8 @@ export default function Settings() {
             <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setSaved(false); }}
               className={inputClass} />
             {startDate && (
-              <p className="text-xs text-[#6B7280] mt-1.5">
-                Week 1 starts on a <span className="text-[#38BDF8]">{startDayName()}</span>
+              <p className="text-xs text-[#7A6B5B] mt-1.5">
+                Week 1 starts on a <span className="text-[#0284C7]">{startDayName()}</span>
                 {' — that will be Day 1 of the plan'}
               </p>
             )}
@@ -93,22 +93,22 @@ export default function Settings() {
           {startDate && raceDate && (
             <div className={`rounded-xl p-4 border ${
               isValid
-                ? 'bg-[#38BDF8]/5 border-[#38BDF8]/30'
+                ? 'bg-[#0284C7]/5 border-[#0284C7]/30'
                 : 'bg-[#F87171]/5 border-[#F87171]/30'
             }`}>
               {isValid ? (
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Weeks</p>
-                    <p className="text-2xl font-black font-mono text-[#38BDF8] mt-0.5">{weeks}</p>
+                    <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">Weeks</p>
+                    <p className="text-2xl font-black font-mono text-[#0284C7] mt-0.5">{weeks}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Start Day</p>
-                    <p className="text-sm font-bold text-white mt-1">{startDayName().slice(0,3)}</p>
+                    <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">Start Day</p>
+                    <p className="text-sm font-bold text-[#201A14] mt-1">{startDayName().slice(0,3)}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Race Day</p>
-                    <p className="text-sm font-bold text-white mt-1">
+                    <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">Race Day</p>
+                    <p className="text-sm font-bold text-[#201A14] mt-1">
                       {new Date(raceDate + 'T00:00:00').toLocaleDateString('en', { day:'numeric', month:'short' })}
                     </p>
                   </div>
@@ -128,12 +128,12 @@ export default function Settings() {
           <div className="flex gap-2 pt-1">
             <button onClick={handleSave} disabled={!isValid}
               className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ backgroundColor: saved ? '#4ADE80' : '#38BDF8', color: '#0D0F14' }}>
+              style={{ backgroundColor: saved ? '#16A34A' : '#0284C7', color: '#FFFFFF' }}>
               <Save size={15} />
               {saved ? 'Saved! Reloading…' : 'Save & Apply'}
             </button>
             <button onClick={handleClearPlan}
-              className="px-4 py-3 rounded-xl border border-[#252B38] text-[#6B7280] hover:text-white hover:border-[#374151] text-sm transition-colors">
+              className="px-4 py-3 rounded-xl border border-[#E6D8BF] text-[#7A6B5B] hover:text-[#201A14] hover:border-[#B8AA96] text-sm transition-colors">
               Reset
             </button>
           </div>
@@ -141,11 +141,11 @@ export default function Settings() {
       </div>
 
       {/* Info box */}
-      <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-5 mb-4">
+      <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-5 mb-4">
         <div className="flex items-start gap-3">
-          <Info size={15} className="text-[#6B7280] mt-0.5 flex-shrink-0" />
-          <div className="text-xs text-[#6B7280] space-y-1.5 leading-relaxed">
-            <p>The plan week always starts on your chosen <span className="text-[#9CA3AF]">Start Date</span> — regardless of what day of the week it falls on.</p>
+          <Info size={15} className="text-[#7A6B5B] mt-0.5 flex-shrink-0" />
+          <div className="text-xs text-[#7A6B5B] space-y-1.5 leading-relaxed">
+            <p>The plan week always starts on your chosen <span className="text-[#4F463B]">Start Date</span> — regardless of what day of the week it falls on.</p>
             <p>e.g. if you start on a Tuesday, Week 1 is Tue–Mon, Week 2 is Tue–Mon, and so on.</p>
             <p>Number of weeks is calculated automatically from the two dates.</p>
           </div>
@@ -153,10 +153,10 @@ export default function Settings() {
       </div>
 
       {/* Race info */}
-      <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-5 mb-4">
+      <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-5 mb-4">
         <div className="flex items-center gap-2 mb-3">
-          <Flag size={16} className="text-[#F97316]" />
-          <p className="text-sm font-semibold text-white">Race Details</p>
+          <Flag size={16} className="text-[#EA580C]" />
+          <p className="text-sm font-semibold text-[#201A14]">Race Details</p>
         </div>
         <div className="space-y-2 text-sm">
           {[
@@ -167,22 +167,22 @@ export default function Settings() {
             { label: 'Run',  value: '10km · Target 1:40:00 · 10:00/km' },
           ].map(({ label, value }) => (
             <div key={label} className="flex gap-3">
-              <span className="text-[#6B7280] w-10 flex-shrink-0">{label}</span>
-              <span className="text-[#9CA3AF]">{value}</span>
+              <span className="text-[#7A6B5B] w-10 flex-shrink-0">{label}</span>
+              <span className="text-[#4F463B]">{value}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Logout */}
-      <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-5">
-        <p className="text-xs uppercase tracking-widest text-[#6B7280] mb-3">Account</p>
+      <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-5">
+        <p className="text-xs uppercase tracking-widest text-[#7A6B5B] mb-3">Account</p>
         <button onClick={handleLogout}
           className="w-full py-3 rounded-xl border border-[#F87171]/30 text-[#F87171] hover:bg-[#F87171]/10 transition-colors text-sm font-medium flex items-center justify-center gap-2">
           <LogOut size={15} />
           Log Out & Clear Local Data
         </button>
-        <p className="text-[10px] text-[#374151] text-center mt-2">
+        <p className="text-[10px] text-[#9A8A76] text-center mt-2">
           Activities saved to the backend will not be deleted
         </p>
       </div>

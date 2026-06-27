@@ -9,9 +9,9 @@ import {
 import { api } from '../utils/api';
 
 const DISCIPLINES = [
-  { key: 'swim',  label: 'Swim',  icon: '🏊', color: '#38BDF8' },
-  { key: 'bike',  label: 'Bike',  icon: '🚴', color: '#F97316' },
-  { key: 'run',   label: 'Run',   icon: '🏃', color: '#4ADE80' },
+  { key: 'swim',  label: 'Swim',  icon: '🏊', color: '#0284C7' },
+  { key: 'bike',  label: 'Bike',  icon: '🚴', color: '#EA580C' },
+  { key: 'run',   label: 'Run',   icon: '🏃', color: '#16A34A' },
   { key: 'brick', label: 'Brick', icon: '⚡', color: '#FB923C' },
   { key: 'gym',   label: 'Gym',   icon: '💪', color: '#A78BFA' },
 ];
@@ -42,32 +42,32 @@ function DurationInput({ label, value, onChange }) {
     onChange(`${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`);
   };
 
-  const fieldClass = "w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-2 py-3 text-white font-mono text-center text-lg placeholder-[#374151] focus:border-[#38BDF8] transition-colors";
+  const fieldClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-2 py-3 text-[#201A14] font-mono text-center text-lg placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors";
 
   return (
     <div>
-      <label className="block text-xs uppercase tracking-widest text-[#6B7280] mb-2">{label}</label>
+      <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">{label}</label>
       <div className="grid grid-cols-3 gap-2 items-center">
         <div className="text-center">
           <input type="number" inputMode="numeric" min="0" max="23"
             value={h} placeholder="0"
             onChange={e => { setH(e.target.value); emit(e.target.value, m, s); }}
             className={fieldClass} />
-          <p className="text-[10px] text-[#6B7280] mt-1">HH</p>
+          <p className="text-[10px] text-[#7A6B5B] mt-1">HH</p>
         </div>
         <div className="text-center">
           <input type="number" inputMode="numeric" min="0" max="59"
             value={m} placeholder="00"
             onChange={e => { setM(e.target.value); emit(h, e.target.value, s); }}
             className={fieldClass} />
-          <p className="text-[10px] text-[#6B7280] mt-1">MM</p>
+          <p className="text-[10px] text-[#7A6B5B] mt-1">MM</p>
         </div>
         <div className="text-center">
           <input type="number" inputMode="numeric" min="0" max="59"
             value={s} placeholder="00"
             onChange={e => { setS(e.target.value); emit(h, m, e.target.value); }}
             className={fieldClass} />
-          <p className="text-[10px] text-[#6B7280] mt-1">SS</p>
+          <p className="text-[10px] text-[#7A6B5B] mt-1">SS</p>
         </div>
       </div>
     </div>
@@ -103,23 +103,23 @@ function MetricsCard({ discipline, distanceM, durationS }) {
   return (
     <div className={`rounded-xl border p-4 mt-4
       ${metrics.onTrack
-        ? 'bg-[#4ADE80]/5 border-[#4ADE80]/30'
+        ? 'bg-[#16A34A]/5 border-[#16A34A]/30'
         : 'bg-[#F87171]/5 border-[#F87171]/30'}`}>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">{paceLabel}</p>
-          <p className="text-lg font-bold font-mono text-white mt-0.5">{paceValue}</p>
+          <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">{paceLabel}</p>
+          <p className="text-lg font-bold font-mono text-[#201A14] mt-0.5">{paceValue}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">{extraLabel}</p>
-          <p className="text-lg font-bold font-mono text-white mt-0.5">{formatDuration(metrics.extrapolated_s)}</p>
+          <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">{extraLabel}</p>
+          <p className="text-lg font-bold font-mono text-[#201A14] mt-0.5">{formatDuration(metrics.extrapolated_s)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#6B7280] uppercase tracking-wider">Status</p>
-          <p className={`text-sm font-bold mt-0.5 ${metrics.onTrack ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
+          <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">Status</p>
+          <p className={`text-sm font-bold mt-0.5 ${metrics.onTrack ? 'text-[#16A34A]' : 'text-[#F87171]'}`}>
             {metrics.onTrack ? '✅ On Track' : '⚠️ Behind'}
           </p>
-          <p className="text-[10px] text-[#6B7280]">{deltaStr}</p>
+          <p className="text-[10px] text-[#7A6B5B]">{deltaStr}</p>
         </div>
       </div>
     </div>
@@ -163,7 +163,7 @@ export default function LogSession() {
   // Gym
   const [gymDone, setGymDone] = useState(true);
 
-  const activeColor = DISCIPLINES.find(d => d.key === discipline)?.color || '#38BDF8';
+  const activeColor = DISCIPLINES.find(d => d.key === discipline)?.color || '#0284C7';
 
   // Compute distance_m and duration_s for metrics card
   const getDistM = () => {
@@ -251,23 +251,23 @@ export default function LogSession() {
   };
 
   const Toggle = ({ value, onChange, opts }) => (
-    <div className="flex bg-[#0D0F14] border border-[#252B38] rounded-xl p-1">
+    <div className="flex bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl p-1">
       {opts.map(o => (
         <button key={o.v} onClick={() => onChange(o.v)}
           className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
-            ${value === o.v ? 'bg-[#252B38] text-white' : 'text-[#6B7280] hover:text-[#9CA3AF]'}`}>
+            ${value === o.v ? 'bg-[#FFFCF4] text-[#201A14] shadow-sm' : 'text-[#7A6B5B] hover:text-[#4F463B]'}`}>
           {o.l}
         </button>
       ))}
     </div>
   );
 
-  const inputClass = "w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white font-mono placeholder-[#374151] focus:border-[#38BDF8] transition-colors";
-  const labelClass = "block text-xs uppercase tracking-widest text-[#6B7280] mb-2";
+  const inputClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] font-mono placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors";
+  const labelClass = "block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2";
 
   return (
     <div className="pb-28 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold text-white mb-6">Log Session</h1>
+      <h1 className="text-xl font-bold text-[#201A14] mb-6">Log Session</h1>
 
       {/* Discipline selector */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
@@ -275,8 +275,8 @@ export default function LogSession() {
           <button key={d.key} onClick={() => setDiscipline(d.key)}
             className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border flex-shrink-0 transition-all
               ${discipline === d.key
-                ? 'border-opacity-100 text-white'
-                : 'border-[#252B38] text-[#6B7280] hover:text-[#9CA3AF] bg-[#161A23]'}`}
+                ? 'border-opacity-100 text-[#201A14]'
+                : 'border-[#E6D8BF] text-[#7A6B5B] hover:text-[#4F463B] bg-[#FFFCF4]'}`}
             style={discipline === d.key ? {
               borderColor: d.color,
               backgroundColor: `${d.color}18`,
@@ -357,14 +357,14 @@ export default function LogSession() {
       {/* Brick form */}
       {discipline === 'brick' && (
         <div className="space-y-5">
-          <p className="text-xs text-[#6B7280] uppercase tracking-widest">Bike Leg</p>
+          <p className="text-xs text-[#7A6B5B] uppercase tracking-widest">Bike Leg</p>
           <div>
             <label className={labelClass}>Distance (km)</label>
             <input type="number" step="0.1" value={brickBikeDist} onChange={e => setBrickBikeDist(e.target.value)}
               placeholder="e.g. 20" className={inputClass} />
           </div>
           <DurationInput label="Duration" value={brickBikeDur} onChange={setBrickBikeDur} />
-          <p className="text-xs text-[#6B7280] uppercase tracking-widest pt-2">Run Leg</p>
+          <p className="text-xs text-[#7A6B5B] uppercase tracking-widest pt-2">Run Leg</p>
           <div>
             <label className={labelClass}>Distance (km)</label>
             <input type="number" step="0.1" value={brickRunDist} onChange={e => setBrickRunDist(e.target.value)}
@@ -378,14 +378,14 @@ export default function LogSession() {
       {/* Gym form */}
       {discipline === 'gym' && (
         <div className="space-y-5">
-          <div className="bg-[#161A23] border border-[#252B38] rounded-xl p-5">
+          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-white">Gym Session Done</p>
-                <p className="text-sm text-[#6B7280] mt-0.5">Strength + conditioning completed</p>
+                <p className="font-semibold text-[#201A14]">Gym Session Done</p>
+                <p className="text-sm text-[#7A6B5B] mt-0.5">Strength + conditioning completed</p>
               </div>
               <button onClick={() => setGymDone(!gymDone)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${gymDone ? 'bg-[#A78BFA]' : 'bg-[#252B38]'}`}>
+                className={`w-12 h-6 rounded-full transition-colors relative ${gymDone ? 'bg-[#7C3AED]' : 'bg-[#D7C4A5]'}`}>
                 <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform
                   ${gymDone ? 'translate-x-6' : 'translate-x-0.5'}`} />
               </button>
@@ -403,8 +403,8 @@ export default function LogSession() {
               <button key={i} onClick={() => setFeel(i + 1)}
                 className={`flex-1 py-3 rounded-xl text-xl transition-all border
                   ${feel === i+1
-                    ? 'border-[#38BDF8] bg-[#38BDF8]/10'
-                    : 'border-[#252B38] bg-[#0D0F14] opacity-50 hover:opacity-80'}`}>
+                    ? 'border-[#0284C7] bg-[#0284C7]/10'
+                    : 'border-[#E6D8BF] bg-[#FFFCF4] opacity-60 hover:opacity-90'}`}>
                 {emoji}
               </button>
             ))}
@@ -418,14 +418,14 @@ export default function LogSession() {
         <textarea value={notes} onChange={e => setNotes(e.target.value)}
           placeholder="How was the session? Any issues?"
           rows={3}
-          className="w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white placeholder-[#374151] focus:border-[#38BDF8] transition-colors resize-none text-sm" />
+          className="w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors resize-none text-sm" />
       </div>
 
       {/* Save button */}
       <button onClick={handleSave}
         disabled={!canSave() || saving}
-        className="w-full mt-6 py-4 rounded-2xl font-bold text-[#0D0F14] transition-all text-base disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{ backgroundColor: saved ? '#4ADE80' : canSave() ? activeColor : '#252B38' }}>
+        className="w-full mt-6 py-4 rounded-2xl font-bold text-white transition-all text-base disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{ backgroundColor: saved ? '#16A34A' : canSave() ? activeColor : '#D7C4A5' }}>
         {saved ? '✅ Saved!' : saving ? 'Saving…' : 'Save Session'}
       </button>
     </div>
