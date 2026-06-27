@@ -20,14 +20,14 @@ const PACE_MODES = [
   { key: 'extrapolated', label: 'Extrapolated' },
 ];
 
-function CustomTooltip({ active, payload, label, unit }) {
+function CustomTooltip({ active, payload, label, formatValue }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-[#FFFCF4] border border-[#E6D8BF] rounded-xl px-3 py-2 text-xs shadow-sm">
       <p className="text-[#7A6B5B] mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-mono font-semibold">
-          {typeof p.value === 'number' ? p.value.toFixed(1) : p.value} {unit}
+          {formatValue ? formatValue(p.value) : p.value}
         </p>
       ))}
     </div>
@@ -187,6 +187,28 @@ export default function Progress() {
     return formatPace(v);
   };
 
+  const formatChartValue = (v) => {
+    if (v === null || v === undefined || Number.isNaN(Number(v))) return '--';
+    const value = Number(v);
+
+    if (metric === 'pace' && paceMode === 'actual') {
+      return value.toFixed(1);
+    }
+
+    if (metric === 'pace' && paceMode === 'extrapolated') {
+      const totalMinutes = Math.round(value);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return `${hours}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    if (tab === 'swim') {
+      return `${Math.round(value)}`;
+    }
+
+    return value.toFixed(1);
+  };
+
   // ── Chart data per metric ──────────────────────────────────────────────────
   const distanceData = sessions.map(s => ({
     name: s.label,
@@ -214,13 +236,13 @@ export default function Progress() {
   const bestExtrapValue = config.best_s / 60;
 
   // Pick dataset + reference lines based on metric + paceMode
-  let chartData, refLineValue, bestLineValue, unitLabel;
+  let chartData, refLineValue, bestLineValue;
   if (metric === 'distance') {
-    chartData = distanceData; refLineValue = null; bestLineValue = null; unitLabel = distLabel;
+    chartData = distanceData; refLineValue = null; bestLineValue = null;
   } else if (paceMode === 'extrapolated') {
-    chartData = extrapPaceData; refLineValue = targetExtrapValue; bestLineValue = bestExtrapValue; unitLabel = 'min';
+    chartData = extrapPaceData; refLineValue = targetExtrapValue; bestLineValue = bestExtrapValue;
   } else {
-    chartData = actualPaceData; refLineValue = targetPaceValue; bestLineValue = bestPaceValue; unitLabel = paceLabel;
+    chartData = actualPaceData; refLineValue = targetPaceValue; bestLineValue = bestPaceValue;
   }
 
   const valueColor = color;
@@ -364,8 +386,8 @@ export default function Progress() {
                   <YAxis tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false}
                     domain={metric === 'distance' ? undefined : yDomain}
                     reversed={metric === 'distance' ? false : shouldReverse} 
-					tickFormatter={(v) => Math.round(v)} />
-                  <Tooltip content={<CustomTooltip unit={unitLabel} />} />
+					tickFormatter={formatChartValue} />
+                  <Tooltip content={<CustomTooltip formatValue={formatChartValue} />} />
                   {refLineValue !== null && metric === 'pace' && (
 					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
 				  )}
@@ -381,8 +403,8 @@ export default function Progress() {
                   <YAxis tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false}
                     domain={metric === 'distance' ? undefined : yDomain}
                     reversed={metric === 'distance' ? false : shouldReverse} 
-					tickFormatter={(v) => Math.round(v)} />
-                  <Tooltip content={<CustomTooltip unit={unitLabel} />} />
+					tickFormatter={formatChartValue} />
+                  <Tooltip content={<CustomTooltip formatValue={formatChartValue} />} />
                   {refLineValue !== null && metric === 'pace' && (
 					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
 				  )}
