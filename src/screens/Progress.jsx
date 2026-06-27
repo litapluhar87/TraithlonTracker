@@ -15,9 +15,8 @@ const TABS = [
   { key: 'run',  label: 'Run',  color: '#4ADE80', icon: '🏃' },
 ];
 
-const METRICS = [
-  { key: 'pace',         label: 'Pace / Speed' },
-  { key: 'volume',       label: 'Volume' },
+const PACE_MODES = [
+  { key: 'actual',       label: 'Actual' },
   { key: 'extrapolated', label: 'Extrapolated' },
 ];
 
@@ -131,7 +130,8 @@ export default function Progress() {
   const { activities, setActivities } = useApp();
   const [editingSession, setEditingSession] = useState(null);
   const [tab, setTab] = useState('swim');
-  const [metric, setMetric] = useState('pace');     // pace | volume | extrapolated
+  const [metric, setMetric] = useState('pace');       // pace | distance
+  const [paceMode, setPaceMode] = useState('actual'); // actual | extrapolated (only relevant when metric === 'pace')
   const [chartType, setChartType] = useState('line'); // bar | line
   const activeTab = TABS.find(t => t.key === tab);
 
@@ -178,6 +178,7 @@ export default function Progress() {
   const lastOnTrack = sessions.length ? sessions[sessions.length - 1]?.onTrack : null;
 
   const paceLabel = tab === 'swim' ? '/100m' : tab === 'bike' ? 'km/h' : '/km';
+  const paceWord = tab === 'bike' ? 'Speed' : 'Pace';
   const distLabel = tab === 'swim' ? 'm' : 'km';
 
   const formatPaceDisplay = (v) => {
@@ -187,46 +188,43 @@ export default function Progress() {
   };
 
   // ── Chart data per metric ──────────────────────────────────────────────────
-  const volumeData = sessions.map(s => ({
+  const distanceData = sessions.map(s => ({
     name: s.label,
     value: parseFloat(s.dist_display.toFixed(1)),
   }));
 
-  const paceData = sessions.map(s => ({
+  const actualPaceData = sessions.map(s => ({
     name: s.label,
     value: tab === 'bike'
-      ? (s.pace ? parseFloat(s.pace.toFixed(1)) : null)
-      : (s.pace ? parseFloat((s.pace / 60).toFixed(2)) : null),
+      ? (s.pace ? Math.round(s.pace * 10) / 10 : null)
+      : (s.pace ? Math.round((s.pace / 60) * 100) / 100 : null),
   })).filter(d => d.value !== null);
 
-  // Extrapolated race time in minutes (easier to read on axis than raw seconds)
-  const extrapData = sessions.map(s => ({
+  const extrapPaceData = sessions.map(s => ({
     name: s.label,
-    value: s.extrapolated_s ? parseFloat((s.extrapolated_s / 60).toFixed(1)) : null,
-    onTrack: s.onTrack,
+    value: s.extrapolated_s ? Math.round((s.extrapolated_s / 60) * 10) / 10 : null,
   })).filter(d => d.value !== null);
 
   const targetPaceValue = tab === 'bike' ? config.target_speed_kmh : config.target_pace_s / 60;
-  const targetExtrapValue = config.target_s / 60; // target race time in minutes
-  
   const bestPaceValue = tab === 'bike'
-    ? (config.distance_m / 1000) / (config.best_s / 3600)  // best speed in km/h
-    : config.best_s / config.distance_m * (tab === 'swim' ? 100 : 1000) / 60; // best pace per 100m or km, in minutes
+    ? (config.distance_m / 1000) / (config.best_s / 3600)
+    : config.best_s / config.distance_m * (tab === 'swim' ? 100 : 1000) / 60;
+
+  const targetExtrapValue = config.target_s / 60;
   const bestExtrapValue = config.best_s / 60;
 
-  // Pick active dataset + reference line value + unit label based on metric
-  let chartData, refLineValue, unitLabel, valueColor;
-  if (metric === 'volume') {
-    chartData = volumeData; refLineValue = null; unitLabel = distLabel; valueColor = color;
-  } else if (metric === 'extrapolated') {
-    chartData = extrapData; refLineValue = targetExtrapValue; unitLabel = 'min'; valueColor = color;
+  // Pick dataset + reference lines based on metric + paceMode
+  let chartData, refLineValue, bestLineValue, unitLabel;
+  if (metric === 'distance') {
+    chartData = distanceData; refLineValue = null; bestLineValue = null; unitLabel = distLabel;
+  } else if (paceMode === 'extrapolated') {
+    chartData = extrapPaceData; refLineValue = targetExtrapValue; bestLineValue = bestExtrapValue; unitLabel = 'min';
   } else {
-    chartData = paceData; refLineValue = targetPaceValue; unitLabel = paceLabel; valueColor = color;
+    chartData = actualPaceData; refLineValue = targetPaceValue; bestLineValue = bestPaceValue; unitLabel = paceLabel;
   }
 
-  // Y domain — always include reference line + data with padding
-  const bestLineValue = metric === 'extrapolated' ? bestExtrapValue : metric === 'pace' ? bestPaceValue : null;
-
+  const valueColor = color;
+  
   const yDomain = useMemo(() => {
     const vals = chartData.map(d => d.value).filter(v => v !== null);
     if (refLineValue !== null) vals.push(refLineValue);
@@ -239,7 +237,7 @@ export default function Progress() {
 
   const reverseAxis = metric === 'pace' && tab !== 'bike'; // lower pace = better, show improvement going up
   // For extrapolated time, lower is also better — reverse too, except keep simple: reverse for both pace and extrapolated except bike speed
-  const shouldReverse = (metric === 'pace' || metric === 'extrapolated') && tab !== 'bike';
+  const shouldReverse = metric === 'pace' && tab !== 'bike';
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -280,16 +278,35 @@ export default function Progress() {
 
           {/* Metric selector: Pace/Speed | Volume | Extrapolated */}
           <div className="flex gap-2 mb-3">
-            {METRICS.map(m => (
-              <button key={m.key} onClick={() => setMetric(m.key)}
-                className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all
-                  ${metric === m.key
-                    ? 'border-[#38BDF8]/40 text-[#38BDF8] bg-[#38BDF8]/10'
-                    : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}>
-                {m.label}
-              </button>
-            ))}
-          </div>
+			<button onClick={() => setMetric('pace')}
+			  className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all
+				${metric === 'pace'
+				  ? 'border-[#38BDF8]/40 text-[#38BDF8] bg-[#38BDF8]/10'
+				  : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}>
+			  {paceWord}
+			</button>
+			<button onClick={() => setMetric('distance')}
+			  className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all
+				${metric === 'distance'
+				  ? 'border-[#38BDF8]/40 text-[#38BDF8] bg-[#38BDF8]/10'
+				  : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}>
+			  Distance
+			</button>
+		  </div>
+
+		  {metric === 'pace' && (
+		    <div className="flex gap-2 mb-3">
+			  {PACE_MODES.map(m => (
+				<button key={m.key} onClick={() => setPaceMode(m.key)}
+				  className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-all
+					${paceMode === m.key
+					  ? 'border-[#4ADE80]/40 text-[#4ADE80] bg-[#4ADE80]/10'
+					  : 'border-[#252B38] text-[#6B7280] hover:text-white'}`}>
+				  {m.label}
+				</button>
+			  ))}
+			</div>
+		  )}
 
           {/* Chart type toggle: bar | line */}
           <div className="flex items-center justify-end gap-1.5 mb-3">
@@ -307,36 +324,28 @@ export default function Progress() {
 
           {/* Main chart card */}
           <div className="bg-[#161A23] border border-[#252B38] rounded-2xl p-4 mb-4">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs uppercase tracking-widest text-[#6B7280]">
-                {METRICS.find(m => m.key === metric)?.label}
-                {metric === 'extrapolated' && ` · ${tab === 'swim' ? '1500m' : tab === 'bike' ? '40km' : '10km'}`}
-              </p>
-              {metric === 'extrapolated' && (
+			<div className="flex items-center justify-between mb-4">
+			  <p className="text-xs uppercase tracking-widest text-[#6B7280]">
+				{metric === 'distance' ? 'Distance' : `${paceWord} · ${paceMode === 'extrapolated' ? 'Extrapolated' : 'Actual'}`}
+				{metric === 'pace' && paceMode === 'extrapolated' && ` (${tab === 'swim' ? '1500m' : tab === 'bike' ? '40km' : '10km'})`}
+			  </p>
+			  {metric === 'pace' && (
 				<div className="flex items-center gap-3">
 				  <div className="flex items-center gap-1.5">
 					<div className="w-3 h-0.5 bg-[#F87171] opacity-70" />
-					<p className="text-[10px] text-[#6B7280]">Target {formatDuration(targetExtrapValue * 60)}</p>
+					<p className="text-[10px] text-[#6B7280]">
+					  Target {paceMode === 'extrapolated' ? formatDuration(targetExtrapValue * 60) : formatPaceDisplay(targetPaceValue * (tab === 'bike' ? 1 : 60))}
+					</p>
 				  </div>
 				  <div className="flex items-center gap-1.5">
 					<div className="w-3 h-0.5 bg-[#4ADE80] opacity-70" />
-					<p className="text-[10px] text-[#6B7280]">Best {formatDuration(bestExtrapValue * 60)}</p>
+					<p className="text-[10px] text-[#6B7280]">
+					  Best {paceMode === 'extrapolated' ? formatDuration(bestExtrapValue * 60) : formatPaceDisplay(bestPaceValue * (tab === 'bike' ? 1 : 60))}
+					</p>
 				  </div>
 				</div>
 			  )}
-              {metric === 'pace' && (
-                <div className="flex items-center gap-3">
-				  <div className="flex items-center gap-2">
-                    <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
-                    <p className="text-[10px] text-[#6B7280]">Target</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
-                    <p className="text-[10px] text-[#6B7280]">Best</p>
-                  </div>
-				</div>
-              )}
-            </div>
+			</div>
 
             <ResponsiveContainer width="100%" height={200}>
               {chartType === 'bar' ? (
@@ -344,13 +353,14 @@ export default function Progress() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#252B38" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false}
-                    domain={metric === 'volume' ? undefined : yDomain}
-                    reversed={metric === 'volume' ? false : shouldReverse} />
+                    domain={metric === 'distance' ? undefined : yDomain}
+                    reversed={metric === 'distance' ? false : shouldReverse} 
+					tickFormatter={(v) => Math.round(v)} />
                   <Tooltip content={<CustomTooltip unit={unitLabel} />} />
-                  {refLineValue !== null && metric !== 'volume' && (
+                  {refLineValue !== null && metric === 'pace' && (
 					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
 				  )}
-				  {bestLineValue !== null && metric !== 'volume' && (
+				  {bestLineValue !== null && metric === 'pace' && (
 				    <ReferenceLine y={bestLineValue} stroke="#4ADE80" strokeDasharray="2 2" strokeOpacity={0.7} strokeWidth={1.5} />
 				  )}
                   <Bar dataKey="value" fill={valueColor} radius={[4,4,0,0]} fillOpacity={0.85} />
@@ -360,13 +370,14 @@ export default function Progress() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#252B38" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#6B7280', fontSize: 10 }} axisLine={false} tickLine={false}
-                    domain={metric === 'volume' ? undefined : yDomain}
-                    reversed={metric === 'volume' ? false : shouldReverse} />
+                    domain={metric === 'distance' ? undefined : yDomain}
+                    reversed={metric === 'distance' ? false : shouldReverse} 
+					tickFormatter={(v) => Math.round(v)} />
                   <Tooltip content={<CustomTooltip unit={unitLabel} />} />
-                  {refLineValue !== null && metric !== 'volume' && (
+                  {refLineValue !== null && metric === 'pace' && (
 					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
 				  )}
-				  {bestLineValue !== null && metric !== 'volume' && (
+				  {bestLineValue !== null && metric === 'pace' && (
 				    <ReferenceLine y={bestLineValue} stroke="#4ADE80" strokeDasharray="2 2" strokeOpacity={0.7} strokeWidth={1.5} />
 				  )}
                   <Line type="monotone" dataKey="value" stroke={valueColor}
