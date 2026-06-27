@@ -6,6 +6,7 @@ import {
   parseDuration, formatPace, formatDuration,
   RACE_CONFIG
 } from '../utils/raceConfig';
+import { api } from '../utils/api';
 
 const DISCIPLINES = [
   { key: 'swim',  label: 'Swim',  icon: '🏊', color: '#38BDF8' },
@@ -238,14 +239,13 @@ export default function LogSession() {
     setSaving(true);
     const activity = buildActivity();
     try {
-      // TODO: replace with real API call when backend endpoints are updated
-      // const res = await api.logActivity(activity);
-      // For now, store locally with a temp id
-      addActivity({ ...activity, id: Date.now() });
+      const res = await api.logActivity(activity);
+      addActivity(res.activity);
       setSaved(true);
       setTimeout(() => { setSaved(false); navigate('/progress'); }, 1200);
     } catch (e) {
-      alert('Failed to save. Backend may not be running.');
+      console.error('Save failed:', e);
+      alert('Failed to save session. Check your connection and try again.');
     }
     setSaving(false);
   };
