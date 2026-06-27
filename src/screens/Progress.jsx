@@ -208,6 +208,11 @@ export default function Progress() {
 
   const targetPaceValue = tab === 'bike' ? config.target_speed_kmh : config.target_pace_s / 60;
   const targetExtrapValue = config.target_s / 60; // target race time in minutes
+  
+  const bestPaceValue = tab === 'bike'
+    ? (config.distance_m / 1000) / (config.best_s / 3600)  // best speed in km/h
+    : config.best_s / config.distance_m * (tab === 'swim' ? 100 : 1000) / 60; // best pace per 100m or km, in minutes
+  const bestExtrapValue = config.best_s / 60;
 
   // Pick active dataset + reference line value + unit label based on metric
   let chartData, refLineValue, unitLabel, valueColor;
@@ -220,9 +225,12 @@ export default function Progress() {
   }
 
   // Y domain — always include reference line + data with padding
+  const bestLineValue = metric === 'extrapolated' ? bestExtrapValue : metric === 'pace' ? bestPaceValue : null;
+
   const yDomain = useMemo(() => {
     const vals = chartData.map(d => d.value).filter(v => v !== null);
     if (refLineValue !== null) vals.push(refLineValue);
+    if (bestLineValue !== null) vals.push(bestLineValue);
     if (!vals.length) return undefined;
     const min = Math.min(...vals), max = Math.max(...vals);
     const pad = (max - min) * 0.15 || 1;
@@ -305,16 +313,28 @@ export default function Progress() {
                 {metric === 'extrapolated' && ` · ${tab === 'swim' ? '1500m' : tab === 'bike' ? '40km' : '10km'}`}
               </p>
               {metric === 'extrapolated' && (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
-                  <p className="text-[10px] text-[#6B7280]">Target {formatDuration(targetExtrapValue * 60)}</p>
-                </div>
-              )}
+				<div className="flex items-center gap-3">
+				  <div className="flex items-center gap-1.5">
+					<div className="w-3 h-0.5 bg-[#F87171] opacity-70" />
+					<p className="text-[10px] text-[#6B7280]">Target {formatDuration(targetExtrapValue * 60)}</p>
+				  </div>
+				  <div className="flex items-center gap-1.5">
+					<div className="w-3 h-0.5 bg-[#4ADE80] opacity-70" />
+					<p className="text-[10px] text-[#6B7280]">Best {formatDuration(bestExtrapValue * 60)}</p>
+				  </div>
+				</div>
+			  )}
               {metric === 'pace' && (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
-                  <p className="text-[10px] text-[#6B7280]">Target</p>
-                </div>
+                <div className="flex items-center gap-3">
+				  <div className="flex items-center gap-2">
+                    <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
+                    <p className="text-[10px] text-[#6B7280]">Target</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-0.5 bg-[#F87171] opacity-70" />
+                    <p className="text-[10px] text-[#6B7280]">Best</p>
+                  </div>
+				</div>
               )}
             </div>
 
@@ -328,8 +348,11 @@ export default function Progress() {
                     reversed={metric === 'volume' ? false : shouldReverse} />
                   <Tooltip content={<CustomTooltip unit={unitLabel} />} />
                   {refLineValue !== null && metric !== 'volume' && (
-                    <ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
-                  )}
+					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
+				  )}
+				  {bestLineValue !== null && metric !== 'volume' && (
+				    <ReferenceLine y={bestLineValue} stroke="#4ADE80" strokeDasharray="2 2" strokeOpacity={0.7} strokeWidth={1.5} />
+				  )}
                   <Bar dataKey="value" fill={valueColor} radius={[4,4,0,0]} fillOpacity={0.85} />
                 </BarChart>
               ) : (
@@ -341,8 +364,11 @@ export default function Progress() {
                     reversed={metric === 'volume' ? false : shouldReverse} />
                   <Tooltip content={<CustomTooltip unit={unitLabel} />} />
                   {refLineValue !== null && metric !== 'volume' && (
-                    <ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
-                  )}
+					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
+				  )}
+				  {bestLineValue !== null && metric !== 'volume' && (
+				    <ReferenceLine y={bestLineValue} stroke="#4ADE80" strokeDasharray="2 2" strokeOpacity={0.7} strokeWidth={1.5} />
+				  )}
                   <Line type="monotone" dataKey="value" stroke={valueColor}
                     strokeWidth={2.5} dot={{ fill: valueColor, r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
