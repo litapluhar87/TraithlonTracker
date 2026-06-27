@@ -16,8 +16,9 @@ const req = async (method, path, body) => {
 export const api = {
   // Activities (manual entry)
   getActivities:  (userId) => req('GET',    `/api/manual/activities/${userId}`),
-  logActivity:    (data)   => req('POST',   `/api/activities`, data),
-  deleteActivity: (id)     => req('DELETE', `/api/activities/${id}`),
+  logActivity:    (data)     => req('POST',   `/api/activities`, data),
+  updateActivity: (id, data) => req('PUT',    `/api/activities/${id}`, data),
+  deleteActivity: (id)       => req('DELETE', `/api/activities/${id}`),
 
   // Athlete (manual entry — get or auto-create)
   getOrCreateAthlete: (userId) => req('GET', `/api/manual/athlete/${userId}`),

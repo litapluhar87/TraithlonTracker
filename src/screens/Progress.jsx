@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { api } from '../utils/api';
+import { Pencil } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine
@@ -43,8 +45,91 @@ function StatCard({ label, value, sub, color }) {
   );
 }
 
+function EditSessionModal({ session, onClose, onSaved }) {
+  const [type, setType] = useState(session.type);
+  const [distance, setDistance] = useState(
+    session.type === 'swim' ? session.distance_m : session.distance_m / 1000
+  );
+  const [duration, setDuration] = useState(formatDuration(session.duration_s));
+  const [date, setDate] = useState(session.start_date.split('T')[0]);
+  const [saving, setSaving] = useState(false);
+
+  const DISCIPLINES = ['swim', 'bike', 'run'];
+  const DISCIPLINE_ICON = { swim: '🏊', bike: '🚴', run: '🏃' };
+
+  const parseDur = (str) => {
+    const parts = str.split(':').map(Number);
+    if (parts.length === 3) return parts[0]*3600 + parts[1]*60 + parts[2];
+    if (parts.length === 2) return parts[0]*60 + parts[1];
+    return 0;
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const distance_m = type === 'swim' ? parseFloat(distance) : parseFloat(distance) * 1000;
+      const duration_s = parseDur(duration);
+      const updated = await api.updateActivity(session.id, {
+        type, distance_m, duration_s, start_date: date,
+      });
+      onSaved(updated.activity);
+      onClose();
+    } catch (e) {
+      alert('Failed to update session.');
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70" onClick={onClose}>
+      <div className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#161A23] rounded-t-3xl p-6 pb-8 border-t border-[#252B38]"
+           onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-1 bg-[#252B38] rounded-full mx-auto mb-5" />
+        <h3 className="font-bold text-white text-lg mb-4">Edit Session</h3>
+
+        <label className="block text-xs uppercase tracking-widest text-[#6B7280] mb-2">Discipline</label>
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {DISCIPLINES.map(d => (
+            <button key={d} onClick={() => setType(d)}
+              className={`py-2 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5
+                ${type === d ? 'border-[#38BDF8] bg-[#38BDF8]/10 text-[#38BDF8]' : 'border-[#252B38] text-[#6B7280]'}`}>
+              {DISCIPLINE_ICON[d]} <span className="capitalize">{d}</span>
+            </button>
+          ))}
+        </div>
+
+        <label className="block text-xs uppercase tracking-widest text-[#6B7280] mb-2">
+          Distance ({type === 'swim' ? 'm' : 'km'})
+        </label>
+        <input type="number" value={distance} onChange={e => setDistance(e.target.value)}
+          className="w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white font-mono mb-4" />
+
+        <label className="block text-xs uppercase tracking-widest text-[#6B7280] mb-2">Duration (hh:mm:ss)</label>
+        <input type="text" value={duration} onChange={e => setDuration(e.target.value)}
+          placeholder="0:45:30"
+          className="w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white font-mono mb-4" />
+
+        <label className="block text-xs uppercase tracking-widest text-[#6B7280] mb-2">Date</label>
+        <input type="date" value={date} onChange={e => setDate(e.target.value)}
+          className="w-full bg-[#0D0F14] border border-[#252B38] rounded-xl px-4 py-3 text-white font-mono mb-5" />
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#252B38] text-white text-sm font-medium">
+            Cancel
+          </button>
+          <button onClick={handleSave} disabled={saving}
+            className="flex-1 py-3 rounded-xl bg-[#38BDF8] text-[#0D0F14] text-sm font-semibold disabled:opacity-50">
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Progress() {
-  const { activities } = useApp();
+  const { activities, setActivities } = useApp();
+  const [editingSession, setEditingSession] = useState(null);
   const [tab, setTab] = useState('swim');
   const [metric, setMetric] = useState('pace');     // pace | volume | extrapolated
   const [chartType, setChartType] = useState('line'); // bar | line
@@ -270,27 +355,42 @@ export default function Progress() {
             <p className="text-xs uppercase tracking-widest text-[#6B7280] mb-3">Session History</p>
             <div className="space-y-3">
               {[...sessions].reverse().map((s, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-[#252B38] last:border-0">
-                  <div>
-                    <p className="text-sm text-white">{s.label}</p>
-                    <p className="text-xs text-[#6B7280]">
-                      {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-mono font-semibold" style={{ color }}>
-                      {formatPaceDisplay(s.pace)} <span className="text-xs text-[#6B7280]">{paceLabel}</span>
-                    </p>
-                    <p className={`text-xs ${s.onTrack ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
-                      {s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
-                    </p>
-                  </div>
-                </div>
+				<div key={i} className="flex items-center justify-between py-2 border-b border-[#252B38] last:border-0">
+				  <div>
+					<p className="text-sm text-white">{s.label}</p>
+					<p className="text-xs text-[#6B7280]">
+					  {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
+					</p>
+				  </div>
+				  <div className="flex items-center gap-2">
+					<div className="text-right">
+					  <p className="text-sm font-mono font-semibold" style={{ color }}>
+						{formatPaceDisplay(s.pace)} <span className="text-xs text-[#6B7280]">{paceLabel}</span>
+					  </p>
+					  <p className={`text-xs ${s.onTrack ? 'text-[#4ADE80]' : 'text-[#F87171]'}`}>
+						{s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
+					  </p>
+					</div>
+					<button onClick={() => setEditingSession(s)}
+					  className="w-7 h-7 rounded-lg flex items-center justify-center text-[#4B5563] hover:text-[#38BDF8] hover:bg-[#38BDF8]/10 transition-colors">
+					  <Pencil size={13} />
+					</button>
+				  </div>
+				</div>
               ))}
             </div>
           </div>
         </>
       )}
+	  {editingSession && (
+		<EditSessionModal
+		  session={editingSession}
+		  onClose={() => setEditingSession(null)}
+		  onSaved={(updated) => {
+			setActivities(prev => prev.map(a => a.id === updated.id ? updated : a));
+		  }}
+		/>
+	  )}
     </div>
   );
 }
