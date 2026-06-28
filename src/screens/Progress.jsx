@@ -17,15 +17,6 @@ const TABS = [
   { key: 'run',  label: 'Run',  color: '#16A34A', icon: '🏃' },
 ];
 
-const [cumulativeSummaries, setCumulativeSummaries] = useState({});
-
-useEffect(() => {
-  if (!user?.user_id) return;
-  api.getAiSummaries(user.user_id)
-    .then(res => setCumulativeSummaries(res.summaries || {}))
-    .catch(err => console.error('Failed to load cumulative summaries:', err));
-}, [user?.user_id, activities.length]); // refetch when activities change (new session logged)
-
 const PACE_MODES = [
   { key: 'actual',       label: 'Actual' },
   { key: 'extrapolated', label: 'Extrapolated' },
@@ -156,6 +147,16 @@ export default function Progress() {
   const [paceMode, setPaceMode] = useState('actual'); // actual | extrapolated (only relevant when metric === 'pace')
   const [chartType, setChartType] = useState('line'); // bar | line
   const [expandedId, setExpandedId] = useState(null);
+  
+  const [cumulativeSummaries, setCumulativeSummaries] = useState({});
+
+  useEffect(() => {
+    if (!user?.user_id) return;
+    api.getAiSummaries(user.user_id)
+      .then(res => setCumulativeSummaries(res.summaries || {}))
+      .catch(err => console.error('Failed to load cumulative summaries:', err));
+  }, [user?.user_id, activities.length]); // refetch when activities change (new session logged)
+
   const activeTab = TABS.find(t => t.key === tab);
 
   const overviewData = useMemo(() => {
