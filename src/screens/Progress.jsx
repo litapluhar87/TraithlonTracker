@@ -601,24 +601,26 @@ export default function Progress() {
 						  className={`text-[#7A6B5B] transition-transform ${expandedId === s.id ? 'rotate-180' : ''}`}
 					    />
 					  )}
-					  <button
-					    onClick={(e) => {
-						  e.stopPropagation();
-						  setEditingSession(s);
-					    }}
-					    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9C8B73] hover:text-[#0284C7] hover:bg-[#0284C7]/10 transition-colors"
-					  >
-					    <Pencil size={13} />
-					  </button>
-					  <button
-					    onClick={(e) => {
-						  e.stopPropagation();
-						  handleDelete(s);
-					    }}
-					    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9C8B73] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-colors"
-					  >
-					    <Trash2 size={13} />
-					  </button>
+					  <div className="flex flex-col gap-1">
+					    <button
+						  onClick={(e) => {
+						    e.stopPropagation();
+						    setEditingSession(s);
+						  }}
+						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#9C8B73] hover:text-[#0284C7] hover:bg-[#0284C7]/10 transition-colors"
+					    >
+						  <Pencil size={11} />
+					    </button>
+					    <button
+						  onClick={(e) => {
+						    e.stopPropagation();
+						    handleDelete(s);
+						  }}
+						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#9C8B73] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-colors"
+					    >
+						  <Trash2 size={11} />
+					    </button>
+					  </div>
 				    </div>
 				  </div>
 
