@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import { formatPace, formatDuration, calcSwim, calcBike, calcRun, RACE_CONFIG } from '../utils/raceConfig';
 import { BarChart3, LineChart as LineIcon } from 'lucide-react';
-import { Sparkles, ChevronDown } from 'lucide-react';
+import { Sparkles, ChevronDown, Trash2 } from 'lucide-react';
 
 const TABS = [
   { key: 'swim', label: 'Swim', color: '#0284C7', icon: '🏊' },
@@ -80,7 +80,7 @@ function EditSessionModal({ session, onClose, onSaved }) {
     }
     setSaving(false);
   };
-
+  
   return (
     <div className="fixed inset-0 z-50 bg-[#201A14]/50" onClick={onClose}>
       <div className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#FFFCF4] rounded-t-3xl p-6 pb-8 border-t border-[#E6D8BF] shadow-2xl"
@@ -131,6 +131,17 @@ function EditSessionModal({ session, onClose, onSaved }) {
 export default function Progress() {
   const { activities, setActivities } = useApp();
   const [editingSession, setEditingSession] = useState(null);
+  const handleDelete = async (session) => {
+    if (!window.confirm(`Delete this ${session.type} session from ${session.label}? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await api.deleteActivity(session.id);
+      setActivities(prev => prev.filter(a => a.id !== session.id));
+    } catch (e) {
+      alert('Failed to delete session. Please try again.');
+    }
+  };
   const [tab, setTab] = useState('swim');
   const [metric, setMetric] = useState('pace');       // pace | distance
   const [paceMode, setPaceMode] = useState('actual'); // actual | extrapolated (only relevant when metric === 'pace')
@@ -495,9 +506,9 @@ export default function Progress() {
             <div className="space-y-3">
 			  {[...sessions].reverse().map((s, i) => (
 			    <div key={i} className="border-b border-[#E6D8BF] last:border-0">
-				  <button
-				    onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-				    className="w-full flex items-center justify-between py-2 text-left"
+				  <div
+					onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
+					className="w-full flex items-center justify-between py-2 text-left cursor-pointer"
 				  >
 				    <div>
 					  <div className="flex items-center gap-1.5">
@@ -534,8 +545,17 @@ export default function Progress() {
 					  >
 					    <Pencil size={13} />
 					  </button>
+					  <button
+					    onClick={(e) => {
+						  e.stopPropagation();
+						  handleDelete(s);
+					    }}
+					    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9C8B73] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-colors"
+					  >
+					    <Trash2 size={13} />
+					  </button>
 				    </div>
-				  </button>
+				  </div>
 
 				  {expandedId === s.id && s.ai_summary && (
 				    <div className="bg-[#FAF3E7] border border-[#E6D8BF] rounded-xl p-3 mb-3 -mt-1">
