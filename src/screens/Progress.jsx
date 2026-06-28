@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
 import { Gauge, Pencil, Ruler } from 'lucide-react';
@@ -16,6 +16,15 @@ const TABS = [
   { key: 'bike', label: 'Bike', color: '#EA580C', icon: '🚴' },
   { key: 'run',  label: 'Run',  color: '#16A34A', icon: '🏃' },
 ];
+
+const [cumulativeSummaries, setCumulativeSummaries] = useState({});
+
+useEffect(() => {
+  if (!user?.user_id) return;
+  api.getAiSummaries(user.user_id)
+    .then(res => setCumulativeSummaries(res.summaries || {}))
+    .catch(err => console.error('Failed to load cumulative summaries:', err));
+}, [user?.user_id, activities.length]); // refetch when activities change (new session logged)
 
 const PACE_MODES = [
   { key: 'actual',       label: 'Actual' },
@@ -129,7 +138,7 @@ function EditSessionModal({ session, onClose, onSaved }) {
 }
 
 export default function Progress() {
-  const { activities, setActivities } = useApp();
+  const { activities, setActivities, user } = useApp();
   const [editingSession, setEditingSession] = useState(null);
   const handleDelete = async (session) => {
     if (!window.confirm(`Delete this ${session.type} session from ${session.label}? This cannot be undone.`)) {
@@ -347,6 +356,20 @@ export default function Progress() {
         </ResponsiveContainer>
       </div>
 
+	  {cumulativeSummaries.overall && (
+	    <div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-4 mb-4">
+		  <div className="flex items-center gap-1.5 mb-2">
+		    <Sparkles size={13} className="text-[#0284C7]" />
+		    <p className="text-[10px] uppercase tracking-wider text-[#0284C7] font-semibold">
+			  Overall Race Readiness
+		    </p>
+		  </div>
+		  <p className="text-sm text-[#3D332A] leading-relaxed">
+		    {cumulativeSummaries.overall}
+		  </p>
+	    </div>
+	  )}      
+	  
       {/* Discipline tabs */}
       <div className="flex gap-2 mb-4">
         {TABS.map(t => (
@@ -359,6 +382,20 @@ export default function Progress() {
           </button>
         ))}
       </div>
+	  
+	  {cumulativeSummaries[tab] && (
+	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
+		  <div className="flex items-center gap-1.5 mb-2">
+		    <Sparkles size={12} className="text-[#0284C7]" />
+		    <p className="text-[10px] uppercase tracking-wider text-[#0284C7]">
+			  {TABS.find(t => t.key === tab)?.label} Progress Summary
+		    </p>
+		  </div>
+		  <p className="text-xs text-[#5C4F3F] leading-relaxed">
+		    {cumulativeSummaries[tab]}
+		  </p>
+	    </div>
+	  )}
 
       {sessions.length === 0 ? (
         <div className="text-center py-20">

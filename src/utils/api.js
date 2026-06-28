@@ -19,6 +19,7 @@ export const api = {
   logActivity:    (data)     => req('POST',   `/api/activities`, data),
   updateActivity: (id, data) => req('PUT',    `/api/activities/${id}`, data),
   deleteActivity: (id)       => req('DELETE', `/api/activities/${id}`),
+  getAiSummaries: (userId) => req('GET', `/api/ai-summaries/${userId}`),
 
   // Athlete (manual entry — get or auto-create)
   getOrCreateAthlete: (userId) => req('GET', `/api/manual/athlete/${userId}`),
