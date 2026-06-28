@@ -147,15 +147,20 @@ export default function Progress() {
   const [paceMode, setPaceMode] = useState('actual'); // actual | extrapolated (only relevant when metric === 'pace')
   const [chartType, setChartType] = useState('line'); // bar | line
   const [expandedId, setExpandedId] = useState(null);
+  const [overallExpanded, setOverallExpanded] = useState(false);
+  const [disciplineExpanded, setDisciplineExpanded] = useState(false);
   
   const [cumulativeSummaries, setCumulativeSummaries] = useState({});
 
   useEffect(() => {
     if (!user?.user_id) return;
     api.getAiSummaries(user.user_id)
-      .then(res => setCumulativeSummaries(res.summaries || {}))
+      .then(res => {
+        console.log('AI summaries response:', res);   // ADD THIS LINE
+        setCumulativeSummaries(res.summaries || {});
+      })
       .catch(err => console.error('Failed to load cumulative summaries:', err));
-  }, [user?.user_id, activities.length]); // refetch when activities change (new session logged)
+  }, [user?.user_id, activities.length]);
 
   const activeTab = TABS.find(t => t.key === tab);
 
@@ -359,22 +364,33 @@ export default function Progress() {
 
 	  {cumulativeSummaries.overall && (
 	    <div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-4 mb-4">
-		  <div className="flex items-center gap-1.5 mb-2">
-		    <Sparkles size={13} className="text-[#0284C7]" />
-		    <p className="text-[10px] uppercase tracking-wider text-[#0284C7] font-semibold">
-			  Overall Race Readiness
+		  <button
+		    onClick={() => setOverallExpanded(!overallExpanded)}
+		    className="w-full flex items-center justify-between"
+		  >
+		    <div className="flex items-center gap-1.5">
+			  <Sparkles size={13} className="text-[#0284C7]" />
+			  <p className="text-[10px] uppercase tracking-wider text-[#0284C7] font-semibold">
+			    Overall Race Readiness
+			  </p>
+		    </div>
+		    <ChevronDown
+			  size={14}
+			  className={`text-[#0284C7] transition-transform ${overallExpanded ? 'rotate-180' : ''}`}
+		    />
+		  </button>
+		  {overallExpanded && (
+		    <p className="text-sm text-[#3D332A] leading-relaxed mt-3">
+			  {cumulativeSummaries.overall}
 		    </p>
-		  </div>
-		  <p className="text-sm text-[#3D332A] leading-relaxed">
-		    {cumulativeSummaries.overall}
-		  </p>
+		  )}
 	    </div>
-	  )}      
+	  )}   
 	  
       {/* Discipline tabs */}
       <div className="flex gap-2 mb-4">
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
+          <button key={t.key} onClick={() => { setTab(t.key); setDisciplineExpanded(false); }}
             className={`flex-1 py-3 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2
               ${tab === t.key ? 'text-white' : 'border-[#E6D8BF] bg-[#FFFCF4] text-[#7A6B5B] hover:text-[#4F463B]'}`}
             style={tab === t.key ? { backgroundColor: t.color, borderColor: t.color } : {}}>
@@ -386,15 +402,26 @@ export default function Progress() {
 	  
 	  {cumulativeSummaries[tab] && (
 	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
-		  <div className="flex items-center gap-1.5 mb-2">
-		    <Sparkles size={12} className="text-[#0284C7]" />
-		    <p className="text-[10px] uppercase tracking-wider text-[#0284C7]">
-			  {TABS.find(t => t.key === tab)?.label} Progress Summary
+		  <button
+		    onClick={() => setDisciplineExpanded(!disciplineExpanded)}
+		    className="w-full flex items-center justify-between"
+		  >
+		    <div className="flex items-center gap-1.5">
+			  <Sparkles size={12} className="text-[#0284C7]" />
+			  <p className="text-[10px] uppercase tracking-wider text-[#0284C7]">
+			    {TABS.find(t => t.key === tab)?.label} Progress Summary
+			  </p>
+		    </div>
+		    <ChevronDown
+			  size={13}
+			  className={`text-[#0284C7] transition-transform ${disciplineExpanded ? 'rotate-180' : ''}`}
+		    />
+		  </button>
+		  {disciplineExpanded && (
+		    <p className="text-xs text-[#5C4F3F] leading-relaxed mt-2">
+			  {cumulativeSummaries[tab]}
 		    </p>
-		  </div>
-		  <p className="text-xs text-[#5C4F3F] leading-relaxed">
-		    {cumulativeSummaries[tab]}
-		  </p>
+		  )}
 	    </div>
 	  )}
 
