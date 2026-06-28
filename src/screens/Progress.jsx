@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { formatPace, formatDuration, calcSwim, calcBike, calcRun, RACE_CONFIG } from '../utils/raceConfig';
 import { BarChart3, LineChart as LineIcon } from 'lucide-react';
+import { Sparkles, ChevronDown } from 'lucide-react';
 
 const TABS = [
   { key: 'swim', label: 'Swim', color: '#0284C7', icon: '🏊' },
@@ -134,6 +135,7 @@ export default function Progress() {
   const [metric, setMetric] = useState('pace');       // pace | distance
   const [paceMode, setPaceMode] = useState('actual'); // actual | extrapolated (only relevant when metric === 'pace')
   const [chartType, setChartType] = useState('line'); // bar | line
+  const [expandedId, setExpandedId] = useState(null);
   const activeTab = TABS.find(t => t.key === tab);
 
   const overviewData = useMemo(() => {
@@ -491,30 +493,61 @@ export default function Progress() {
           <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4">
             <p className="text-xs uppercase tracking-widest text-[#7A6B5B] mb-3">Session History</p>
             <div className="space-y-3">
-              {[...sessions].reverse().map((s, i) => (
-				<div key={i} className="flex items-center justify-between py-2 border-b border-[#E6D8BF] last:border-0">
-				  <div>
-					<p className="text-sm text-[#201A14]">{s.label}</p>
-					<p className="text-xs text-[#7A6B5B]">
-					  {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
-					</p>
-				  </div>
-				  <div className="flex items-center gap-2">
-					<div className="text-right">
-					  <p className="text-sm font-mono font-semibold" style={{ color }}>
-						{formatPaceDisplay(s.pace)} <span className="text-xs text-[#7A6B5B]">{paceLabel}</span>
+			  {[...sessions].reverse().map((s, i) => (
+			    <div key={i} className="border-b border-[#E6D8BF] last:border-0">
+				  <button
+				    onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
+				    className="w-full flex items-center justify-between py-2 text-left"
+				  >
+				    <div>
+					  <div className="flex items-center gap-1.5">
+					    <p className="text-sm text-[#201A14]">{s.label}</p>
+					    {s.ai_summary && (
+						  <Sparkles size={11} className="text-[#0284C7] opacity-70" />
+					    )}
+					  </div>
+					  <p className="text-xs text-[#7A6B5B]">
+					    {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
 					  </p>
-					  <p className={`text-xs ${s.onTrack ? 'text-[#16A34A]' : 'text-[#F87171]'}`}>
-						{s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
-					  </p>
-					</div>
-					<button onClick={() => setEditingSession(s)}
-					  className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9A8A76] hover:text-[#0284C7] hover:bg-[#0284C7]/10 transition-colors">
-					  <Pencil size={13} />
-					</button>
-				  </div>
-				</div>
-              ))}
+				    </div>
+				    <div className="flex items-center gap-2">
+					  <div className="text-right">
+					    <p className="text-sm font-mono font-semibold" style={{ color }}>
+						  {formatPaceDisplay(s.pace)} <span className="text-xs text-[#7A6B5B]">{paceLabel}</span>
+					    </p>
+					    <p className={`text-xs ${s.onTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+						  {s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
+					    </p>
+					  </div>
+					  {s.ai_summary && (
+					    <ChevronDown
+						  size={14}
+						  className={`text-[#7A6B5B] transition-transform ${expandedId === s.id ? 'rotate-180' : ''}`}
+					    />
+					  )}
+					  <button
+					    onClick={(e) => {
+						  e.stopPropagation();
+						  setEditingSession(s);
+					    }}
+					    className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9C8B73] hover:text-[#0284C7] hover:bg-[#0284C7]/10 transition-colors"
+					  >
+					    <Pencil size={13} />
+					  </button>
+				    </div>
+				  </button>
+
+				  {expandedId === s.id && s.ai_summary && (
+				    <div className="bg-[#FAF3E7] border border-[#E6D8BF] rounded-xl p-3 mb-3 -mt-1">
+					  <div className="flex items-center gap-1.5 mb-1.5">
+					    <Sparkles size={11} className="text-[#0284C7]" />
+					    <p className="text-[10px] uppercase tracking-wider text-[#0284C7]">AI Insight</p>
+					  </div>
+					  <p className="text-xs text-[#5C4F3F] leading-relaxed">{s.ai_summary}</p>
+				    </div>
+				  )}
+			    </div>
+			  ))}
             </div>
           </div>
         </>

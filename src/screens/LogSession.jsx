@@ -12,8 +12,6 @@ const DISCIPLINES = [
   { key: 'swim',  label: 'Swim',  icon: '🏊', color: '#0284C7' },
   { key: 'bike',  label: 'Bike',  icon: '🚴', color: '#EA580C' },
   { key: 'run',   label: 'Run',   icon: '🏃', color: '#16A34A' },
-  { key: 'brick', label: 'Brick', icon: '⚡', color: '#FB923C' },
-  { key: 'gym',   label: 'Gym',   icon: '💪', color: '#A78BFA' },
 ];
 
 const FEEL_EMOJI = ['😓', '😐', '🙂', '😊', '🔥'];
@@ -42,7 +40,7 @@ function DurationInput({ label, value, onChange }) {
     onChange(`${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`);
   };
 
-  const fieldClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-2 py-3 text-[#201A14] font-mono text-center text-lg placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors";
+  const fieldClass = "w-full bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl px-2 py-3 text-[#201A14] font-mono text-center text-lg placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors";
 
   return (
     <div>
@@ -153,16 +151,6 @@ export default function LogSession() {
   const [runDist, setRunDist] = useState('');
   const [runDur, setRunDur] = useState('');
 
-  // Brick
-  const [brickBikeDist, setBrickBikeDist] = useState('');
-  const [brickBikeDur, setBrickBikeDur] = useState('');
-  const [brickRunDist, setBrickRunDist] = useState('');
-  const [brickRunDur, setBrickRunDur] = useState('');
-  const [brickTransition, setBrickTransition] = useState('');
-
-  // Gym
-  const [gymDone, setGymDone] = useState(true);
-
   const activeColor = DISCIPLINES.find(d => d.key === discipline)?.color || '#0284C7';
 
   // Compute distance_m and duration_s for metrics card
@@ -183,8 +171,6 @@ export default function LogSession() {
     if (discipline === 'swim') return swimDist && swimDur;
     if (discipline === 'bike') return bikeDist && bikeDur;
     if (discipline === 'run')  return runDist && runDur;
-    if (discipline === 'brick') return brickBikeDist && brickBikeDur && brickRunDist && brickRunDur;
-    if (discipline === 'gym')  return gymDone;
     return false;
   };
 
@@ -218,20 +204,6 @@ export default function LogSession() {
       duration_s: parseDuration(runDur),
       run_type: runType,
     };
-    if (discipline === 'brick') return {
-      ...base, type: 'brick',
-      name: 'Brick Session',
-      bike_distance_m: parseFloat(brickBikeDist) * 1000,
-      bike_duration_s: parseDuration(brickBikeDur),
-      run_distance_m: parseFloat(brickRunDist) * 1000,
-      run_duration_s: parseDuration(brickRunDur),
-      transition_s: brickTransition ? parseDuration(brickTransition) : null,
-      distance_m: (parseFloat(brickBikeDist) + parseFloat(brickRunDist)) * 1000,
-      duration_s: parseDuration(brickBikeDur) + parseDuration(brickRunDur),
-    };
-    if (discipline === 'gym') return {
-      ...base, type: 'gym', name: 'Gym Session', distance_m: 0, duration_s: 0,
-    };
   };
 
   const handleSave = async () => {
@@ -262,7 +234,7 @@ export default function LogSession() {
     </div>
   );
 
-  const inputClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] font-mono placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors";
+  const inputClass = "w-full bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl px-4 py-3 text-[#201A14] font-mono placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors";
   const labelClass = "block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2";
 
   return (
@@ -270,10 +242,10 @@ export default function LogSession() {
       <h1 className="text-xl font-bold text-[#201A14] mb-6">Log Session</h1>
 
       {/* Discipline selector */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="grid grid-cols-3 gap-2 mb-6">
         {DISCIPLINES.map(d => (
           <button key={d.key} onClick={() => setDiscipline(d.key)}
-            className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border flex-shrink-0 transition-all
+            className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border transition-all
               ${discipline === d.key
                 ? 'border-opacity-100 text-[#201A14]'
                 : 'border-[#E6D8BF] text-[#7A6B5B] hover:text-[#4F463B] bg-[#FFFCF4]'}`}
@@ -288,27 +260,27 @@ export default function LogSession() {
         ))}
       </div>
 
-      {/* Date */}
-      <div className="mb-5">
-        <label className={labelClass}>Date</label>
-        <input type="date" value={date} onChange={e => setDate(e.target.value)}
-          className={inputClass} />
-      </div>
-
       {/* Swim form */}
       {discipline === 'swim' && (
         <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Distance (metres)</label>
+              <input type="number" value={swimDist} onChange={e => setSwimDist(e.target.value)}
+                placeholder="e.g. 1500" className={inputClass} />
+            </div>
+          </div>
+          <DurationInput label="Duration" value={swimDur} onChange={setSwimDur} />
           <div>
             <label className={labelClass}>Type</label>
             <Toggle value={swimType} onChange={setSwimType}
               opts={[{v:'pool',l:'🏊 Pool'},{v:'open',l:'🌊 Open Water'}]} />
           </div>
-          <div>
-            <label className={labelClass}>Distance (metres)</label>
-            <input type="number" value={swimDist} onChange={e => setSwimDist(e.target.value)}
-              placeholder="e.g. 1500" className={inputClass} />
-          </div>
-          <DurationInput label="Duration" value={swimDur} onChange={setSwimDur} />
           <MetricsCard discipline="swim" distanceM={parseFloat(swimDist)||0} durationS={parseDuration(swimDur)} />
         </div>
       )}
@@ -316,17 +288,24 @@ export default function LogSession() {
       {/* Bike form */}
       {discipline === 'bike' && (
         <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Distance (km)</label>
+              <input type="number" step="0.1" value={bikeDist} onChange={e => setBikeDist(e.target.value)}
+                placeholder="e.g. 40" className={inputClass} />
+            </div>
+          </div>
+          <DurationInput label="Duration" value={bikeDur} onChange={setBikeDur} />
           <div>
             <label className={labelClass}>Type</label>
             <Toggle value={bikeType} onChange={setBikeType}
               opts={[{v:'outdoor',l:'🚴 Outdoor'},{v:'indoor',l:'🏠 Indoor'}]} />
           </div>
-          <div>
-            <label className={labelClass}>Distance (km)</label>
-            <input type="number" step="0.1" value={bikeDist} onChange={e => setBikeDist(e.target.value)}
-              placeholder="e.g. 40" className={inputClass} />
-          </div>
-          <DurationInput label="Duration" value={bikeDur} onChange={setBikeDur} />
           <div>
             <label className={labelClass}>Elevation (m) — optional</label>
             <input type="number" value={bikeElev} onChange={e => setBikeElev(e.target.value)}
@@ -339,78 +318,43 @@ export default function LogSession() {
       {/* Run form */}
       {discipline === 'run' && (
         <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelClass}>Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Distance (km)</label>
+              <input type="number" step="0.1" value={runDist} onChange={e => setRunDist(e.target.value)}
+                placeholder="e.g. 10" className={inputClass} />
+            </div>
+          </div>
+          <DurationInput label="Duration" value={runDur} onChange={setRunDur} />
           <div>
             <label className={labelClass}>Type</label>
             <Toggle value={runType} onChange={setRunType}
               opts={[{v:'outdoor',l:'🏃 Outdoor'},{v:'treadmill',l:'⚙️ Treadmill'}]} />
           </div>
-          <div>
-            <label className={labelClass}>Distance (km)</label>
-            <input type="number" step="0.1" value={runDist} onChange={e => setRunDist(e.target.value)}
-              placeholder="e.g. 10" className={inputClass} />
-          </div>
-          <DurationInput label="Duration" value={runDur} onChange={setRunDur} />
           <MetricsCard discipline="run" distanceM={(parseFloat(runDist)||0)*1000} durationS={parseDuration(runDur)} />
         </div>
       )}
 
-      {/* Brick form */}
-      {discipline === 'brick' && (
-        <div className="space-y-5">
-          <p className="text-xs text-[#7A6B5B] uppercase tracking-widest">Bike Leg</p>
-          <div>
-            <label className={labelClass}>Distance (km)</label>
-            <input type="number" step="0.1" value={brickBikeDist} onChange={e => setBrickBikeDist(e.target.value)}
-              placeholder="e.g. 20" className={inputClass} />
-          </div>
-          <DurationInput label="Duration" value={brickBikeDur} onChange={setBrickBikeDur} />
-          <p className="text-xs text-[#7A6B5B] uppercase tracking-widest pt-2">Run Leg</p>
-          <div>
-            <label className={labelClass}>Distance (km)</label>
-            <input type="number" step="0.1" value={brickRunDist} onChange={e => setBrickRunDist(e.target.value)}
-              placeholder="e.g. 5" className={inputClass} />
-          </div>
-          <DurationInput label="Duration" value={brickRunDur} onChange={setBrickRunDur} />
-          <DurationInput label="Transition Time (mm:ss) — optional" value={brickTransition} onChange={setBrickTransition} />
-        </div>
-      )}
-
-      {/* Gym form */}
-      {discipline === 'gym' && (
-        <div className="space-y-5">
-          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-[#201A14]">Gym Session Done</p>
-                <p className="text-sm text-[#7A6B5B] mt-0.5">Strength + conditioning completed</p>
-              </div>
-              <button onClick={() => setGymDone(!gymDone)}
-                className={`w-12 h-6 rounded-full transition-colors relative ${gymDone ? 'bg-[#7C3AED]' : 'bg-[#D7C4A5]'}`}>
-                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform
-                  ${gymDone ? 'translate-x-6' : 'translate-x-0.5'}`} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* How it felt */}
-      {discipline !== 'gym' && (
-        <div className="mt-6">
-          <label className={labelClass}>How did it feel?</label>
-          <div className="flex gap-2">
-            {FEEL_EMOJI.map((emoji, i) => (
-              <button key={i} onClick={() => setFeel(i + 1)}
-                className={`flex-1 py-3 rounded-xl text-xl transition-all border
-                  ${feel === i+1
-                    ? 'border-[#0284C7] bg-[#0284C7]/10'
-                    : 'border-[#E6D8BF] bg-[#FFFCF4] opacity-60 hover:opacity-90'}`}>
-                {emoji}
-              </button>
-            ))}
-          </div>
+      <div className="mt-6">
+        <label className={labelClass}>How did it feel?</label>
+        <div className="flex gap-2">
+          {FEEL_EMOJI.map((emoji, i) => (
+            <button key={i} onClick={() => setFeel(i + 1)}
+              className={`flex-1 py-3 rounded-xl text-xl transition-all border
+                ${feel === i+1
+                  ? 'border-[#0284C7] bg-[#0284C7]/10'
+                  : 'border-[#E6D8BF] bg-[#FFFCF4] opacity-60 hover:opacity-90'}`}>
+              {emoji}
+            </button>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Notes */}
       <div className="mt-5">
@@ -418,7 +362,7 @@ export default function LogSession() {
         <textarea value={notes} onChange={e => setNotes(e.target.value)}
           placeholder="How was the session? Any issues?"
           rows={3}
-          className="w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors resize-none text-sm" />
+          className="w-full bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl px-4 py-3 text-[#201A14] placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors resize-none text-sm" />
       </div>
 
       {/* Save button */}
