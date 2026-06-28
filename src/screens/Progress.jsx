@@ -4,7 +4,8 @@ import { api } from '../utils/api';
 import { Gauge, Pencil, Ruler } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, ReferenceLine
+  Tooltip, ResponsiveContainer, ReferenceLine, RadarChart, PolarGrid,
+  PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 import { formatPace, formatDuration, calcSwim, calcBike, calcRun, RACE_CONFIG } from '../utils/raceConfig';
 import { BarChart3, LineChart as LineIcon } from 'lucide-react';
@@ -135,6 +136,46 @@ export default function Progress() {
   const [chartType, setChartType] = useState('line'); // bar | line
   const activeTab = TABS.find(t => t.key === tab);
 
+  const overviewData = useMemo(() => {
+    const capScore = (value) => Math.min(100, Math.max(0, Math.round(value || 0)));
+
+    const calcByType = {
+      swim: calcSwim,
+      bike: calcBike,
+      run: calcRun,
+    };
+
+    const scoredSessions = activities
+      .filter(a => calcByType[a.type])
+      .map(a => {
+        const metrics = calcByType[a.type](a.distance_m, a.duration_s);
+        return { ...a, metrics };
+      })
+      .filter(a => a.metrics);
+
+    const bestFor = (type) => {
+      const typeSessions = scoredSessions.filter(a => a.type === type);
+      if (!typeSessions.length) return 0;
+
+      const config = RACE_CONFIG[type];
+      if (type === 'bike') {
+        const bestSpeed = Math.max(...typeSessions.map(a => a.metrics.speed_kmh || 0));
+        return capScore((bestSpeed / config.target_speed_kmh) * 100);
+      }
+
+      const paces = typeSessions.map(a => a.metrics.pace_s).filter(Boolean);
+      if (!paces.length) return 0;
+      const bestPace = Math.min(...paces);
+      return capScore((config.target_pace_s / bestPace) * 100);
+    };
+
+    return [
+      { metric: 'Swim Pace', score: bestFor('swim') },
+      { metric: 'Bike Speed', score: bestFor('bike') },
+      { metric: 'Run Pace', score: bestFor('run') },
+    ];
+  }, [activities]);
+
   const sessionsRaw = useMemo(() =>
     activities
       .filter(a => a.type === tab)
@@ -264,6 +305,34 @@ export default function Progress() {
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold text-[#201A14] mb-6">Progress</h1>
+
+      {/* Overview */}
+      <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
+          <p className="text-[10px] text-[#7A6B5B]">% of target achieved</p>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <RadarChart data={overviewData} outerRadius={78}>
+            <PolarGrid stroke="#E6D8BF" />
+            <PolarAngleAxis dataKey="metric" tick={{ fill: '#7A6B5B', fontSize: 11 }} />
+            <PolarRadiusAxis
+              angle={90}
+              domain={[0, 100]}
+              tick={{ fill: '#7A6B5B', fontSize: 10 }}
+              tickFormatter={(v) => `${v}%`}
+            />
+            <Radar
+              dataKey="score"
+              stroke="#0284C7"
+              fill="#0284C7"
+              fillOpacity={0.18}
+              strokeWidth={2}
+            />
+            <Tooltip content={<CustomTooltip formatValue={(v) => `${Math.round(Number(v) || 0)}%`} />} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* Discipline tabs */}
       <div className="flex gap-2 mb-4">
