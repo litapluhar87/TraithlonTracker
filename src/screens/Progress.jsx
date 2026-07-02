@@ -149,6 +149,8 @@ export default function Progress() {
   const [expandedId, setExpandedId] = useState(null);
   const [overallExpanded, setOverallExpanded] = useState(false);
   const [disciplineExpanded, setDisciplineExpanded] = useState(false);
+  const [radarMode, setRadarMode] = useState('target');    // target | ideal
+  const [sessionFilter, setSessionFilter] = useState('all'); // all | last3 | top3 | avg
   
   const [cumulativeSummaries, setCumulativeSummaries] = useState({});
 
@@ -188,13 +190,21 @@ export default function Progress() {
       const config = RACE_CONFIG[type];
       if (type === 'bike') {
         const bestSpeed = Math.max(...typeSessions.map(a => a.metrics.speed_kmh || 0));
-        return capScore((bestSpeed / config.target_speed_kmh) * 100);
+        const benchmarkSpeed = radarMode === 'ideal'
+          ? (config.distance_m / 1000) / (config.best_s / 3600)
+          : config.target_speed_kmh;
+        return capScore((bestSpeed / benchmarkSpeed) * 100);
       }
 
       const paces = typeSessions.map(a => a.metrics.pace_s).filter(Boolean);
       if (!paces.length) return 0;
       const bestPace = Math.min(...paces);
-      return capScore((config.target_pace_s / bestPace) * 100);
+      const benchmarkPace = radarMode === 'ideal'
+        ? (type === 'swim'
+            ? (config.best_s / config.distance_m) * 100
+            : config.best_s / (config.distance_m / 1000))
+        : config.target_pace_s;
+      return capScore((benchmarkPace / bestPace) * 100);
     };
 
     return [
@@ -202,7 +212,7 @@ export default function Progress() {
       { metric: 'Bike Speed', score: bestFor('bike') },
       { metric: 'Run Pace', score: bestFor('run') },
     ];
-  }, [activities]);
+  }, [activities, radarMode]);
 
   const sessionsRaw = useMemo(() =>
     activities
@@ -336,9 +346,33 @@ export default function Progress() {
 
       {/* Overview */}
       <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-2">
           <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
-          <p className="text-[10px] text-[#7A6B5B]">% of target achieved</p>
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] text-[#7A6B5B]">
+              % of {radarMode === 'ideal' ? 'ideal' : 'target'} achieved
+            </p>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setRadarMode('target')}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+                  ${radarMode === 'target'
+                    ? 'bg-[#0284C7] text-white'
+                    : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
+              >
+                Target
+              </button>
+              <button
+                onClick={() => setRadarMode('ideal')}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+                  ${radarMode === 'ideal'
+                    ? 'bg-[#0284C7] text-white'
+                    : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
+              >
+                Ideal
+              </button>
+            </div>
+          </div>
         </div>
         <ResponsiveContainer width="100%" height={220}>
           <RadarChart data={overviewData} outerRadius={78}>
@@ -567,9 +601,77 @@ export default function Progress() {
 
           {/* Session history */}
           <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4">
-            <p className="text-xs uppercase tracking-widest text-[#7A6B5B] mb-3">Session History</p>
+            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+              <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Session History</p>
+              <div className="flex gap-1.5">
+                {[
+                  { key: 'all',   label: 'All' },
+                  { key: 'last3', label: 'Last 3' },
+                  { key: 'top3',  label: 'Top 3' },
+                  { key: 'avg',   label: 'Avg' },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setSessionFilter(opt.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
+                      ${sessionFilter === opt.key
+                        ? 'bg-[#0284C7] text-white border-[#0284C7]'
+                        : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {sessionFilter === 'avg' && sessions.length > 0 && (() => {
+              const withPace = sessions.filter(x => x.pace != null);
+              const avgPaceVal = withPace.length
+                ? withPace.reduce((sum, x) => sum + x.pace, 0) / withPace.length
+                : null;
+              const avgDist = sessions.reduce(
+                (sum, x) => sum + (tab === 'swim' ? x.distance_m : x.distance_m / 1000),
+                0,
+              ) / sessions.length;
+              const avgDur = sessions.reduce((sum, x) => sum + (x.duration_s || 0), 0) / sessions.length;
+              return (
+                <div className="bg-[#EFE2CB] rounded-xl p-3 mb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-[#7A6B5B] font-semibold">
+                        Average · {sessions.length} sessions
+                      </p>
+                      <p className="text-xs text-[#5C4F3F] mt-0.5">
+                        {avgDist.toFixed(1)} {distLabel} · {formatDuration(avgDur)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-mono font-semibold" style={{ color }}>
+                        {formatPaceDisplay(avgPaceVal)}{' '}
+                        <span className="text-xs text-[#7A6B5B]">{paceLabel}</span>
+                      </p>
+                      <p className="text-[10px] text-[#7A6B5B]">
+                        avg {tab === 'bike' ? 'speed' : 'pace'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="space-y-3">
-			  {[...sessions].reverse().map((s, i) => (
+			  {(() => {
+			    const reversed = [...sessions].reverse();
+			    if (sessionFilter === 'last3') return reversed.slice(0, 3);
+			    if (sessionFilter === 'top3') {
+			      const withPace = sessions.filter(x => x.pace != null);
+			      const sorted = [...withPace].sort((a, b) =>
+			        tab === 'bike' ? (b.pace - a.pace) : (a.pace - b.pace)
+			      );
+			      return sorted.slice(0, 3);
+			    }
+			    return reversed;
+			  })().map((s, i) => (
 			    <div key={i} className="border-b border-[#E6D8BF] last:border-0">
 				  <div
 					onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
