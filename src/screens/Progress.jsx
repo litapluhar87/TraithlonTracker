@@ -188,23 +188,51 @@ export default function Progress() {
       if (!typeSessions.length) return 0;
 
       const config = RACE_CONFIG[type];
-      if (type === 'bike') {
-        const bestSpeed = Math.max(...typeSessions.map(a => a.metrics.speed_kmh || 0));
+      const isBike = type === 'bike';
+
+      // Filter sessions per sessionFilter
+      let filtered;
+      if (sessionFilter === 'last3') {
+        filtered = [...typeSessions]
+          .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
+          .slice(0, 3);
+      } else if (sessionFilter === 'top3') {
+        filtered = [...typeSessions]
+          .sort((a, b) => isBike
+            ? (b.metrics.speed_kmh || 0) - (a.metrics.speed_kmh || 0)
+            : (a.metrics.pace_s || Infinity) - (b.metrics.pace_s || Infinity))
+          .slice(0, 3);
+      } else {
+        filtered = typeSessions;
+      }
+      if (!filtered.length) return 0;
+
+      // Aggregate: 'all' & 'last3' → peak (best); 'top3' & 'avg' → average
+      const useAvg = true;
+
+      if (isBike) {
+        const speeds = filtered.map(a => a.metrics.speed_kmh || 0).filter(v => v > 0);
+        if (!speeds.length) return 0;
+        const aggSpeed = useAvg
+          ? speeds.reduce((s, v) => s + v, 0) / speeds.length
+          : Math.max(...speeds);
         const benchmarkSpeed = radarMode === 'ideal'
           ? (config.distance_m / 1000) / (config.best_s / 3600)
           : config.target_speed_kmh;
-        return capScore((bestSpeed / benchmarkSpeed) * 100);
+        return capScore((aggSpeed / benchmarkSpeed) * 100);
       }
 
-      const paces = typeSessions.map(a => a.metrics.pace_s).filter(Boolean);
+      const paces = filtered.map(a => a.metrics.pace_s).filter(Boolean);
       if (!paces.length) return 0;
-      const bestPace = Math.min(...paces);
+      const aggPace = useAvg
+        ? paces.reduce((s, v) => s + v, 0) / paces.length
+        : Math.min(...paces);
       const benchmarkPace = radarMode === 'ideal'
         ? (type === 'swim'
             ? (config.best_s / config.distance_m) * 100
             : config.best_s / (config.distance_m / 1000))
         : config.target_pace_s;
-      return capScore((benchmarkPace / bestPace) * 100);
+      return capScore((benchmarkPace / aggPace) * 100);
     };
 
     return [
@@ -212,7 +240,7 @@ export default function Progress() {
       { metric: 'Bike Speed', score: bestFor('bike') },
       { metric: 'Run Pace', score: bestFor('run') },
     ];
-  }, [activities, radarMode]);
+  }, [activities, radarMode, sessionFilter]);
 
   const sessionsRaw = useMemo(() =>
     activities
@@ -374,6 +402,27 @@ export default function Progress() {
             </div>
           </div>
         </div>
+
+        <div className="flex gap-1.5 mb-3 flex-wrap">
+          {[
+            { key: 'all',   label: 'All' },
+            { key: 'last3', label: 'Last 3' },
+            { key: 'top3',  label: 'Top 3' },
+            { key: 'avg',   label: 'Avg' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setSessionFilter(opt.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
+                ${sessionFilter === opt.key
+                  ? 'bg-[#0284C7] text-white border-[#0284C7]'
+                  : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
         <ResponsiveContainer width="100%" height={220}>
           <RadarChart data={overviewData} outerRadius={78}>
             <PolarGrid stroke="#E6D8BF" />
