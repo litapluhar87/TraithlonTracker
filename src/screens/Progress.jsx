@@ -12,9 +12,10 @@ import { BarChart3, LineChart as LineIcon } from 'lucide-react';
 import { Sparkles, ChevronDown, Trash2 } from 'lucide-react';
 
 const TABS = [
-  { key: 'swim', label: 'Swim', color: '#0284C7', icon: '🏊' },
-  { key: 'bike', label: 'Bike', color: '#EA580C', icon: '🚴' },
-  { key: 'run',  label: 'Run',  color: '#16A34A', icon: '🏃' },
+  { key: 'swim',     label: 'Swim',     color: '#0284C7', icon: '🏊' },
+  { key: 'bike',     label: 'Bike',     color: '#EA580C', icon: '🚴' },
+  { key: 'run',      label: 'Run',      color: '#16A34A', icon: '🏃' },
+  { key: 'combined', label: 'Combined', color: '#7C3AED', icon: '🏁' },
 ];
 
 const PACE_MODES = [
@@ -151,6 +152,7 @@ export default function Progress() {
   const [disciplineExpanded, setDisciplineExpanded] = useState(false);
   const [radarMode, setRadarMode] = useState('target');    // target | ideal
   const [sessionFilter, setSessionFilter] = useState('all'); // all | last3 | top3 | avg
+  const [combinedFilter, setCombinedFilter] = useState('average');
   
   const [cumulativeSummaries, setCumulativeSummaries] = useState({});
 
@@ -268,8 +270,69 @@ export default function Progress() {
       label: new Date(a.start_date).toLocaleDateString('en-IN', { day:'numeric', month:'short' }),
     };
   }), [sessionsRaw, tab]);
+  
+  const combinedStats = useMemo(() => {
+    if (tab !== 'combined') return null;
 
-  const config = RACE_CONFIG[tab];
+    const RACE_DISTANCES = { swim: 1500, bike: 40000, run: 10000 };
+    const RACE_TARGETS_S = { swim: 3600, bike: 7500, run: 6000 };
+    const RACE_BEST_S    = { swim: 3300, bike: 6300, run: 4800 };
+
+    const getExtrapForDisc = (discipline) => {
+      const disc_sessions = activities
+        .filter(a => a.type === discipline && a.distance_m && a.duration_s)
+        .sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+
+      if (!disc_sessions.length) return null;
+
+      const raceDist = RACE_DISTANCES[discipline];
+
+      // Calculate extrapolated time for each session
+      const withExtrap = disc_sessions.map(a => ({
+        ...a,
+        extrap_s: (a.duration_s / a.distance_m) * raceDist,
+      }));
+
+      let filtered;
+      if (combinedFilter === 'last3') {
+        filtered = withExtrap.slice(0, 3); // already sorted newest first
+      } else if (combinedFilter === 'top3') {
+        filtered = [...withExtrap]
+          .sort((a, b) => a.extrap_s - b.extrap_s) // fastest first
+          .slice(0, 3);
+      } else {
+        filtered = withExtrap; // all
+      }
+
+      const avgExtrap = filtered.reduce((s, a) => s + a.extrap_s, 0) / filtered.length;
+      const targetS   = RACE_TARGETS_S[discipline];
+      const bestS     = RACE_BEST_S[discipline];
+      const onTrack   = avgExtrap <= targetS;
+
+      return {
+        discipline,
+        avgExtrap_s: avgExtrap,
+        targetS,
+        bestS,
+        onTrack,
+        sessionCount: filtered.length,
+      };
+    };
+
+    const swim = getExtrapForDisc('swim');
+    const bike = getExtrapForDisc('bike');
+    const run  = getExtrapForDisc('run');
+
+    const allAvailable = swim && bike && run;
+    const totalExtrap_s = allAvailable ? swim.avgExtrap_s + bike.avgExtrap_s + run.avgExtrap_s : null;
+    const totalTarget_s = 3600 + 7500 + 6000; // 5:45:00
+    const totalBest_s   = 3300 + 6300 + 4800; // 4:40:00
+    const totalOnTrack  = totalExtrap_s !== null ? totalExtrap_s <= totalTarget_s : null;
+
+    return { swim, bike, run, totalExtrap_s, totalTarget_s, totalBest_s, totalOnTrack };
+  }, [activities, tab, combinedFilter]);
+
+  const config = RACE_CONFIG[tab] || {};
   const color = activeTab.color;
 
   // Stats
@@ -366,7 +429,7 @@ export default function Progress() {
 
   const reverseAxis = metric === 'pace' && tab !== 'bike'; // lower pace = better, show improvement going up
   // For extrapolated time, lower is also better — reverse too, except keep simple: reverse for both pace and extrapolated except bike speed
-  const shouldReverse = metric === 'pace';
+  const shouldReverse = metric === 'pace' && (paceMode === 'extrapolated' || tab !== 'bike');
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -506,8 +569,128 @@ export default function Progress() {
 		  )}
 	    </div>
 	  )}
+	  
+	  {/* Combined Tab */}
+	  {tab === 'combined' && (
+	    <div>
+		  {/* Filter toggle */}
+		  <div className="flex gap-2 mb-4">
+		    {[
+			  { key: 'last3',   label: 'Last 3' },
+			  { key: 'top3',    label: 'Top 3' },
+			  { key: 'average', label: 'Average' },
+		    ].map(opt => (
+			  <button key={opt.key} onClick={() => setCombinedFilter(opt.key)}
+			    className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-colors
+				  ${combinedFilter === opt.key
+				    ? 'bg-[#7C3AED] text-white border-[#7C3AED]'
+				    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
+			    {opt.label}
+			  </button>
+		    ))}
+		  </div>
 
-      {sessions.length === 0 ? (
+		  {combinedStats ? (
+		    <>
+			  {/* Total time card */}
+			  <div className="bg-[#FFFCF4] border-2 border-[#7C3AED]/30 rounded-2xl p-5 mb-4">
+			    <p className="text-[10px] uppercase tracking-widest text-[#7A6B5B] mb-1">
+				  Projected Total Race Time
+			    </p>
+			    <p className="text-4xl font-black font-mono text-[#7C3AED] mb-1">
+				  {combinedStats.totalExtrap_s
+				    ? formatDuration(combinedStats.totalExtrap_s)
+				    : '--:--:--'}
+			    </p>
+			    <div className="flex items-center gap-3 mt-2">
+				  <div className="flex items-center gap-1.5">
+				    <div className="w-3 h-0.5 bg-[#F87171] opacity-70" />
+				    <p className="text-[10px] text-[#7A6B5B]">
+					  Target {formatDuration(combinedStats.totalTarget_s)}
+				    </p>
+				  </div>
+				  <div className="flex items-center gap-1.5">
+				    <div className="w-3 h-0.5 bg-[#16A34A] opacity-70" />
+				    <p className="text-[10px] text-[#7A6B5B]">
+					  Ideal {formatDuration(combinedStats.totalBest_s)}
+				    </p>
+				  </div>
+			    </div>
+				{combinedStats.totalExtrap_s !== null && (() => {
+				  const vsTarget = combinedStats.totalExtrap_s - combinedStats.totalTarget_s;
+				  const vsIdeal  = combinedStats.totalExtrap_s - combinedStats.totalBest_s;
+				  return (
+					<div className="mt-3 space-y-1.5">
+					  <div className="flex items-center justify-between">
+						<p className={`text-sm font-semibold ${vsTarget <= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+						  {vsTarget <= 0
+							? `✅ On track for target · ${formatDuration(Math.abs(vsTarget))} ahead`
+							: `⚠️ Behind target · ${formatDuration(Math.abs(vsTarget))} to close`}
+						</p>
+					  </div>
+					  <div className="flex items-center justify-between">
+						<p className={`text-sm font-semibold ${vsIdeal <= 0 ? 'text-[#16A34A]' : 'text-[#7A6B5B]'}`}>
+						  {vsIdeal <= 0
+							? `✅ On track for ideal · ${formatDuration(Math.abs(vsIdeal))} ahead`
+							: `🎯 ${formatDuration(Math.abs(vsIdeal))} away from ideal`}
+						</p>
+					  </div>
+					</div>
+				  );
+				})()}
+			  </div>
+
+			  {/* Per-discipline breakdown */}
+			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
+			    <p className="text-xs uppercase tracking-widest text-[#7A6B5B] mb-3">Breakdown</p>
+			    <div className="space-y-3">
+				  {[
+				    { key: 'swim', label: 'Swim 1500m', icon: '🏊', color: '#0284C7', data: combinedStats.swim },
+				    { key: 'bike', label: 'Bike 40km',  icon: '🚴', color: '#EA580C', data: combinedStats.bike },
+				    { key: 'run',  label: 'Run 10km',   icon: '🏃', color: '#16A34A', data: combinedStats.run },
+				  ].map(({ key, label, icon, color: dColor, data }) => (
+				    <div key={key} className="flex items-center justify-between py-2 border-b border-[#E6D8BF] last:border-0">
+					  <div className="flex items-center gap-2">
+					    <span className="text-base">{icon}</span>
+					    <div>
+						  <p className="text-sm text-[#201A14]">{label}</p>
+						  <p className="text-[10px] text-[#7A6B5B]">
+						    {data ? `${data.sessionCount} session${data.sessionCount !== 1 ? 's' : ''}` : 'No data'}
+						  </p>
+					    </div>
+					  </div>
+					  <div className="text-right">
+					    {data ? (
+						  <>
+						    <p className="text-sm font-mono font-bold" style={{ color: dColor }}>
+							  {formatDuration(data.avgExtrap_s)}
+						    </p>
+						    <p className={`text-[10px] ${data.onTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+							  {data.onTrack ? '✅ on track' : '⚠️ behind'}
+							  {' · target '}{formatDuration(data.targetS)}
+						    </p>
+						  </>
+					    ) : (
+						  <p className="text-xs text-[#7A6B5B]">No sessions yet</p>
+					    )}
+					  </div>
+				    </div>
+				  ))}
+			    </div>
+			  </div>
+			  
+		    </>
+		  ) : (
+		    <div className="text-center py-20">
+			  <p className="text-4xl mb-4">🏁</p>
+			  <p className="text-[#7A6B5B] text-sm">Log sessions in all three disciplines</p>
+			  <p className="text-[#9A8A76] text-xs mt-1">to see your combined race projection.</p>
+		    </div>
+		  )}
+	    </div>
+	  )}	  
+
+      {tab !== 'combined' && (sessions.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-4xl mb-4">{activeTab.icon}</p>
           <p className="text-[#7A6B5B] text-sm">No {tab} sessions logged yet.</p>
@@ -788,7 +971,7 @@ export default function Progress() {
             </div>
           </div>
         </>
-      )}
+      ))}
 	  {editingSession && (
 		<EditSessionModal
 		  session={editingSession}
