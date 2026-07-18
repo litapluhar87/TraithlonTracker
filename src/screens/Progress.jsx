@@ -12,10 +12,10 @@ import { BarChart3, LineChart as LineIcon } from 'lucide-react';
 import { Sparkles, ChevronDown, Trash2 } from 'lucide-react';
 
 const TABS = [
+  { key: 'combined', label: 'Total', color: '#7C3AED', icon: '🏁' },
   { key: 'swim',     label: 'Swim',     color: '#0284C7', icon: '🏊' },
   { key: 'bike',     label: 'Bike',     color: '#EA580C', icon: '🚴' },
   { key: 'run',      label: 'Run',      color: '#16A34A', icon: '🏃' },
-  { key: 'combined', label: 'Total', color: '#7C3AED', icon: '🏁' },
 ];
 
 const PACE_MODES = [
@@ -143,7 +143,7 @@ export default function Progress() {
       alert('Failed to delete session. Please try again.');
     }
   };
-  const [tab, setTab] = useState('swim');
+  const [tab, setTab] = useState('combined');
   const [metric, setMetric] = useState('pace');       // pace | distance
   const [paceMode, setPaceMode] = useState('actual'); // actual | extrapolated (only relevant when metric === 'pace')
   const [chartType, setChartType] = useState('line'); // bar | line
@@ -435,103 +435,7 @@ export default function Progress() {
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold text-[#201A14] mb-6">Progress</h1>
 
-      {/* Overview */}
-      <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-5">
-        <div className="flex items-center justify-between mb-3 gap-2">
-          <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
-          <div className="flex items-center gap-2">
-            <p className="text-[10px] text-[#7A6B5B]">
-              % of {radarMode === 'ideal' ? 'ideal' : 'target'} achieved
-            </p>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setRadarMode('target')}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-                  ${radarMode === 'target'
-                    ? 'bg-[#0284C7] text-white'
-                    : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
-              >
-                Target
-              </button>
-              <button
-                onClick={() => setRadarMode('ideal')}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-                  ${radarMode === 'ideal'
-                    ? 'bg-[#0284C7] text-white'
-                    : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
-              >
-                Ideal
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-1.5 mb-3 flex-wrap">
-          {[
-            { key: 'all',   label: 'All' },
-            { key: 'last3', label: 'Last 3' },
-            { key: 'top3',  label: 'Top 3' },
-          ].map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setSessionFilter(opt.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
-                ${sessionFilter === opt.key
-                  ? 'bg-[#0284C7] text-white border-[#0284C7]'
-                  : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        <ResponsiveContainer width="100%" height={220}>
-          <RadarChart data={overviewData} outerRadius={78}>
-            <PolarGrid stroke="#E6D8BF" />
-            <PolarAngleAxis dataKey="metric" tick={{ fill: '#7A6B5B', fontSize: 11 }} />
-            <PolarRadiusAxis
-              angle={90}
-              domain={[0, 100]}
-              tick={{ fill: '#7A6B5B', fontSize: 10 }}
-              tickFormatter={(v) => `${v}%`}
-            />
-            <Radar
-              dataKey="score"
-              stroke="#0284C7"
-              fill="#0284C7"
-              fillOpacity={0.18}
-              strokeWidth={2}
-            />
-            <Tooltip content={<CustomTooltip formatValue={(v) => `${Math.round(Number(v) || 0)}%`} />} />
-          </RadarChart>
-        </ResponsiveContainer>
-      </div>
-
-	  {cumulativeSummaries.overall && (
-	    <div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-4 mb-4">
-		  <button
-		    onClick={() => setOverallExpanded(!overallExpanded)}
-		    className="w-full flex items-center justify-between"
-		  >
-		    <div className="flex items-center gap-1.5">
-			  <Sparkles size={13} className="text-[#0284C7]" />
-			  <p className="text-[10px] uppercase tracking-wider text-[#0284C7] font-semibold">
-			    Overall Race Readiness
-			  </p>
-		    </div>
-		    <ChevronDown
-			  size={14}
-			  className={`text-[#0284C7] transition-transform ${overallExpanded ? 'rotate-180' : ''}`}
-		    />
-		  </button>
-		  {overallExpanded && (
-		    <p className="text-sm text-[#3D332A] leading-relaxed mt-3">
-			  {cumulativeSummaries.overall}
-		    </p>
-		  )}
-	    </div>
-	  )}   
-	  
+ 
       {/* Discipline tabs */}
 	  {/* Discipline tabs — RACL style top nav */}
 	  <div className="flex mb-4 bg-white border-b border-[#E6D8BF] -mx-4 px-0">
@@ -589,6 +493,30 @@ export default function Progress() {
 	  {/* Combined Tab */}
 	  {tab === 'combined' && (
 	    <div>
+		  {cumulativeSummaries.overall && (
+			<div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-4 mb-4">
+			  <button
+				onClick={() => setOverallExpanded(!overallExpanded)}
+				className="w-full flex items-center justify-between"
+			  >
+				<div className="flex items-center gap-1.5">
+				  <Sparkles size={13} className="text-[#0284C7]" />
+				  <p className="text-[10px] uppercase tracking-wider text-[#0284C7] font-semibold">
+					Overall Race Readiness
+				  </p>
+				</div>
+				<ChevronDown
+				  size={14}
+				  className={`text-[#0284C7] transition-transform ${overallExpanded ? 'rotate-180' : ''}`}
+				/>
+			  </button>
+			  {overallExpanded && (
+				<p className="text-sm text-[#3D332A] leading-relaxed mt-3">
+				  {cumulativeSummaries.overall}
+				</p>
+			  )}
+			</div>
+		  )}  
 		  {/* Filter toggle */}
 		  <div className="flex gap-2 mb-4">
 		    {[
@@ -694,6 +622,78 @@ export default function Progress() {
 				  ))}
 			    </div>
 			  </div>
+			  
+			  {/* Overview */}
+			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-5">
+				<div className="flex items-center justify-between mb-3 gap-2">
+				  <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
+				  <div className="flex items-center gap-2">
+					<p className="text-[10px] text-[#7A6B5B]">
+					  % of {radarMode === 'ideal' ? 'ideal' : 'target'} achieved
+					</p>
+					<div className="flex gap-1">
+					  <button
+						onClick={() => setRadarMode('target')}
+						className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+						  ${radarMode === 'target'
+							? 'bg-[#0284C7] text-white'
+							: 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
+					  >
+						Target
+					  </button>
+					  <button
+						onClick={() => setRadarMode('ideal')}
+						className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+						  ${radarMode === 'ideal'
+							? 'bg-[#0284C7] text-white'
+							: 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
+					  >
+						Ideal
+					  </button>
+					</div>
+				  </div>
+				</div>
+
+				<div className="flex gap-1.5 mb-3 flex-wrap">
+				  {[
+					{ key: 'all',   label: 'All' },
+					{ key: 'last3', label: 'Last 3' },
+					{ key: 'top3',  label: 'Top 3' },
+				  ].map(opt => (
+					<button
+					  key={opt.key}
+					  onClick={() => setSessionFilter(opt.key)}
+					  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
+						${sessionFilter === opt.key
+						  ? 'bg-[#0284C7] text-white border-[#0284C7]'
+						  : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
+					>
+					  {opt.label}
+					</button>
+				  ))}
+				</div>
+
+				<ResponsiveContainer width="100%" height={220}>
+				  <RadarChart data={overviewData} outerRadius={78}>
+					<PolarGrid stroke="#E6D8BF" />
+					<PolarAngleAxis dataKey="metric" tick={{ fill: '#7A6B5B', fontSize: 11 }} />
+					<PolarRadiusAxis
+					  angle={90}
+					  domain={[0, 100]}
+					  tick={{ fill: '#7A6B5B', fontSize: 10 }}
+					  tickFormatter={(v) => `${v}%`}
+					/>
+					<Radar
+					  dataKey="score"
+					  stroke="#0284C7"
+					  fill="#0284C7"
+					  fillOpacity={0.18}
+					  strokeWidth={2}
+					/>
+					<Tooltip content={<CustomTooltip formatValue={(v) => `${Math.round(Number(v) || 0)}%`} />} />
+				  </RadarChart>
+				</ResponsiveContainer>
+			  </div>			  
 			  
 		    </>
 		  ) : (
