@@ -15,7 +15,7 @@ const TABS = [
   { key: 'swim',     label: 'Swim',     color: '#0284C7', icon: '🏊' },
   { key: 'bike',     label: 'Bike',     color: '#EA580C', icon: '🚴' },
   { key: 'run',      label: 'Run',      color: '#16A34A', icon: '🏃' },
-  { key: 'combined', label: 'Combined', color: '#7C3AED', icon: '🏁' },
+  { key: 'combined', label: 'Total', color: '#7C3AED', icon: '🏁' },
 ];
 
 const PACE_MODES = [
@@ -533,17 +533,33 @@ export default function Progress() {
 	  )}   
 	  
       {/* Discipline tabs */}
-      <div className="flex gap-2 mb-4">
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => { setTab(t.key); setDisciplineExpanded(false); }}
-            className={`flex-1 py-3 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2
-              ${tab === t.key ? 'text-white' : 'border-[#E6D8BF] bg-[#FFFCF4] text-[#7A6B5B] hover:text-[#4F463B]'}`}
-            style={tab === t.key ? { backgroundColor: t.color, borderColor: t.color } : {}}>
-            <span>{t.icon}</span>
-            <span>{t.label}</span>
-          </button>
-        ))}
-      </div>
+	  {/* Discipline tabs — RACL style top nav */}
+	  <div className="flex mb-4 bg-white border-b border-[#E6D8BF] -mx-4 px-0">
+	    {TABS.map(t => (
+		  <button
+		    key={t.key}
+		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); }}
+		    className="flex-1 flex flex-col items-center pt-1.5 pb-1 gap-0.5 transition-all"
+		    style={{
+			  borderTop:    tab === t.key ? `3px solid ${t.color}` : '3px solid transparent',
+			  borderLeft:   tab === t.key ? '0.5px solid #E6D8BF'  : '0.5px solid transparent',
+			  borderRight:  tab === t.key ? '0.5px solid #E6D8BF'  : '0.5px solid transparent',
+			  borderBottom: tab === t.key ? '2px solid #FFFCF4'    : 'none',
+			  background:   tab === t.key ? '#FFFCF4' : '#F5EFE3',
+			  marginBottom: tab === t.key ? -1 : 0,
+		    }}>
+		    <span style={{ fontSize: 15, opacity: tab === t.key ? 1 : 0.4 }}>{t.icon}</span>
+		    <span style={{
+			  fontSize: 10,
+			  fontWeight: tab === t.key ? 600 : 400,
+			  color: tab === t.key ? t.color : '#aaa',
+			  letterSpacing: 0.2,
+		    }}>
+			  {t.label}
+		    </span>
+		  </button>
+	    ))}
+	  </div>
 	  
 	  {cumulativeSummaries[tab] && (
 	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
