@@ -239,8 +239,6 @@ export default function LogSession() {
 
   return (
     <div className="pb-24 px-4 pt-3 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold text-[#201A14] mb-6">Log Session</h1>
-
 	  {/* Discipline tabs — RACL style */}
 	  <div className="flex bg-white border-b border-[#E6D8BF] -mx-4 mb-4">
 	    {DISCIPLINES.filter(d => d.key !== 'brick' && d.key !== 'gym').map(d => (

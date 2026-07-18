@@ -60,7 +60,6 @@ export default function Settings() {
 
   return (
     <div className="pb-28 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold text-[#201A14] mb-1">Settings</h1>
       <p className="text-sm text-[#7A6B5B] mb-6">Logged in as <span className="text-[#201A14]">{user?.displayName}</span></p>
 
       {/* Plan dates */}

@@ -433,8 +433,6 @@ export default function Progress() {
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold text-[#201A14] mb-6">Progress</h1>
-
  
       {/* Discipline tabs */}
 	  {/* Discipline tabs — RACL style top nav */}
