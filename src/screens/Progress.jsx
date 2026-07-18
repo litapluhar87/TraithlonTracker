@@ -366,7 +366,7 @@ export default function Progress() {
 
   const reverseAxis = metric === 'pace' && tab !== 'bike'; // lower pace = better, show improvement going up
   // For extrapolated time, lower is also better — reverse too, except keep simple: reverse for both pace and extrapolated except bike speed
-  const shouldReverse = metric === 'pace' && tab !== 'bike';
+  const shouldReverse = metric === 'pace';
 
   return (
     <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
@@ -408,7 +408,6 @@ export default function Progress() {
             { key: 'all',   label: 'All' },
             { key: 'last3', label: 'Last 3' },
             { key: 'top3',  label: 'Top 3' },
-            { key: 'avg',   label: 'Avg' },
           ].map(opt => (
             <button
               key={opt.key}
@@ -601,7 +600,7 @@ export default function Progress() {
 				  <div className="flex items-center gap-1.5">
 					<div className="w-3 h-0.5 bg-[#16A34A] opacity-70" />
 					<p className="text-[10px] text-[#7A6B5B]">
-					  Best {paceMode === 'extrapolated' ? formatDuration(bestExtrapValue * 60) : formatPaceDisplay(bestPaceValue * (tab === 'bike' ? 1 : 60))}
+					  Ideal {paceMode === 'extrapolated' ? formatDuration(bestExtrapValue * 60) : formatPaceDisplay(bestPaceValue * (tab === 'bike' ? 1 : 60))}
 					</p>
 				  </div>
 				</div>
@@ -611,7 +610,7 @@ export default function Progress() {
             <ResponsiveContainer width="100%" height={200}>
               {chartType === 'bar' ? (
                 <BarChart data={chartData} barSize={20}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E6D8BF" vertical={false} />
+                  <CartesianGrid stroke="transparent" vertical={false} horizontal={false} />
                   <XAxis dataKey="name" tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false}
                     domain={metric === 'distance' ? undefined : yDomain}
@@ -628,7 +627,7 @@ export default function Progress() {
                 </BarChart>
               ) : (
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E6D8BF" vertical={false} />
+                  <CartesianGrid stroke="transparent" vertical={false} horizontal={false} />
                   <XAxis dataKey="name" tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false}
                     domain={metric === 'distance' ? undefined : yDomain}
