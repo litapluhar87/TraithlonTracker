@@ -492,7 +492,7 @@ export default function Progress() {
 	  {tab === 'combined' && (
 	    <div>
 		  {cumulativeSummaries.overall && (
-			<div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-3 mb-3">
+			<div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
 			  <button
 				onClick={() => setOverallExpanded(!overallExpanded)}
 				className="w-full flex items-center justify-between"
