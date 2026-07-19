@@ -815,10 +815,10 @@ export default function Progress() {
 					tickFormatter={formatChartValue} />
                   <Tooltip content={<CustomTooltip formatValue={formatChartValue} />} />
                   {refLineValue !== null && metric === 'pace' && (
-					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
+					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="2 2" strokeOpacity={0.8} strokeWidth={1.5} />
 				  )}
 				  {bestLineValue !== null && metric === 'pace' && (
-				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="4 4" strokeOpacity={0.7} strokeWidth={1.5} />
+				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="2 2" strokeOpacity={0.7} strokeWidth={1.5} />
 				  )}
                   <Bar dataKey="value" fill={valueColor} radius={[4,4,0,0]} fillOpacity={0.85} />
                 </BarChart>
@@ -832,10 +832,10 @@ export default function Progress() {
 					tickFormatter={formatChartValue} />
                   <Tooltip content={<CustomTooltip formatValue={formatChartValue} />} />
                   {refLineValue !== null && metric === 'pace' && (
-					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="4 4" strokeOpacity={0.8} strokeWidth={1.5} />
+					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="3 3" strokeOpacity={0.8} strokeWidth={1.5} />
 				  )}
 				  {bestLineValue !== null && metric === 'pace' && (
-				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="4 4" strokeOpacity={0.7} strokeWidth={1.5} />
+				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="3 3" strokeOpacity={0.7} strokeWidth={1.5} />
 				  )}
                   <Line type="monotone" dataKey="value" stroke={valueColor}
                     strokeWidth={2.5} dot={{ fill: valueColor, r: 4 }} activeDot={{ r: 6 }} />
