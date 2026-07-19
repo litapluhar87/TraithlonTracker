@@ -152,7 +152,7 @@ export default function Progress() {
   const [disciplineExpanded, setDisciplineExpanded] = useState(false);
   const [radarMode, setRadarMode] = useState('target');    // target | ideal
   const [sessionFilter, setSessionFilter] = useState('all'); // all | last3 | top3 | avg
-  const [combinedFilter, setCombinedFilter] = useState('average');
+  const [combinedFilter, setCombinedFilter] = useState('last3');
   
   const [cumulativeSummaries, setCumulativeSummaries] = useState({});
 
@@ -432,7 +432,7 @@ export default function Progress() {
   const shouldReverse = metric === 'pace' && (paceMode === 'extrapolated' || tab !== 'bike');
 
   return (
-    <div className="pb-24 px-4 pt-6 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-0 max-w-lg mx-auto">
  
       {/* Discipline tabs */}
 	  {/* Discipline tabs — RACL style top nav */}
@@ -535,51 +535,57 @@ export default function Progress() {
 		  {combinedStats ? (
 		    <>
 			  {/* Total time card */}
-			  <div className="bg-[#FFFCF4] border-2 border-[#7C3AED]/30 rounded-2xl p-3 mb-3">
-			    <p className="text-[10px] uppercase tracking-widest text-[#7A6B5B] mb-1">
+			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] rounded-2xl p-4 mb-4">
+			    <p className="text-[10px] uppercase tracking-widest text-[#7A6B5B] mb-2">
 				  Projected Total Race Time
 			    </p>
-			    <p className="text-4xl font-black font-mono text-[#7C3AED] mb-1">
-				  {combinedStats.totalExtrap_s
-				    ? formatDuration(combinedStats.totalExtrap_s)
-				    : '--:--:--'}
-			    </p>
-			    <div className="flex items-center gap-3 mt-2">
-				  <div className="flex items-center gap-1.5">
-				    <div className="w-3 h-0.5 bg-[#F87171] opacity-70" />
-				    <p className="text-[10px] text-[#7A6B5B]">
-					  Target {formatDuration(combinedStats.totalTarget_s)}
-				    </p>
+			    <div className="flex items-center gap-4">
+				  {/* Left — Target + Ideal stacked */}
+				  <div className="flex flex-col gap-1.5">
+				    <div>
+					  <p className="text-[9px] uppercase tracking-wider text-[#7A6B5B]">Target</p>
+					  <p className="text-sm font-bold font-mono text-[#DC2626]">
+					    {formatDuration(combinedStats.totalTarget_s)}
+					  </p>
+				    </div>
+				    <div>
+					  <p className="text-[9px] uppercase tracking-wider text-[#7A6B5B]">Ideal</p>
+					  <p className="text-sm font-bold font-mono text-[#16A34A]">
+					    {formatDuration(combinedStats.totalBest_s)}
+					  </p>
+				    </div>
 				  </div>
-				  <div className="flex items-center gap-1.5">
-				    <div className="w-3 h-0.5 bg-[#16A34A] opacity-70" />
-				    <p className="text-[10px] text-[#7A6B5B]">
-					  Ideal {formatDuration(combinedStats.totalBest_s)}
+
+				  {/* Right — Actual projected time, large */}
+				  <div className="flex-1 text-right">
+				    <p className="text-[9px] uppercase tracking-wider text-[#7A6B5B]">Projected</p>
+				    <p className="text-4xl font-black font-mono text-[#7C3AED] leading-none mt-0.5">
+					  {combinedStats.totalExtrap_s
+					    ? formatDuration(combinedStats.totalExtrap_s)
+					    : '--:--:--'}
 				    </p>
 				  </div>
 			    </div>
-				{combinedStats.totalExtrap_s !== null && (() => {
+
+			    {/* On track status */}
+			    {combinedStats.totalExtrap_s !== null && (() => {
 				  const vsTarget = combinedStats.totalExtrap_s - combinedStats.totalTarget_s;
 				  const vsIdeal  = combinedStats.totalExtrap_s - combinedStats.totalBest_s;
 				  return (
-					<div className="mt-3 space-y-1.5">
-					  <div className="flex items-center justify-between">
-						<p className={`text-sm font-semibold ${vsTarget <= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-						  {vsTarget <= 0
-							? `✅ On track for target · ${formatDuration(Math.abs(vsTarget))} ahead`
-							: `⚠️ Behind target · ${formatDuration(Math.abs(vsTarget))} to close`}
-						</p>
-					  </div>
-					  <div className="flex items-center justify-between">
-						<p className={`text-sm font-semibold ${vsIdeal <= 0 ? 'text-[#16A34A]' : 'text-[#7A6B5B]'}`}>
-						  {vsIdeal <= 0
-							? `✅ On track for ideal · ${formatDuration(Math.abs(vsIdeal))} ahead`
-							: `🎯 ${formatDuration(Math.abs(vsIdeal))} away from ideal`}
-						</p>
-					  </div>
-					</div>
+				    <div className="mt-3 space-y-1 pt-3 border-t border-[#E6D8BF]">
+					  <p className={`text-xs font-semibold ${vsTarget <= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+					    {vsTarget <= 0
+						  ? `✅ On track for target · ${formatDuration(Math.abs(vsTarget))} ahead`
+						  : `⚠️ Behind target · ${formatDuration(Math.abs(vsTarget))} to close`}
+					  </p>
+					  <p className={`text-xs font-semibold ${vsIdeal <= 0 ? 'text-[#16A34A]' : 'text-[#7A6B5B]'}`}>
+					    {vsIdeal <= 0
+						  ? `✅ On track for ideal · ${formatDuration(Math.abs(vsIdeal))} ahead`
+						  : `🎯 ${formatDuration(Math.abs(vsIdeal))} away from ideal`}
+					  </p>
+				    </div>
 				  );
-				})()}
+			    })()}
 			  </div>
 
 			  {/* Overview */}

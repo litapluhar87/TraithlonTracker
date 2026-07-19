@@ -238,7 +238,7 @@ export default function LogSession() {
   const labelClass = "block text-xs uppercase tracking-widest text-[#7A6B5B] mb-1.5";
 
   return (
-    <div className="pb-24 px-4 pt-3 max-w-lg mx-auto">
+    <div className="pb-24 px-4 pt-0 max-w-lg mx-auto">
 	  {/* Discipline tabs — RACL style */}
 	  <div className="flex bg-white border-b border-[#E6D8BF] -mx-4 mb-4">
 	    {DISCIPLINES.filter(d => d.key !== 'brick' && d.key !== 'gym').map(d => (
