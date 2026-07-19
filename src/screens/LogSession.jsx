@@ -40,7 +40,7 @@ function DurationInput({ label, value, onChange }) {
     onChange(`${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`);
   };
 
-  const fieldClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-2 py-2 text-[#201A14] font-mono text-center text-base placeholder-[#C5B49A] focus:border-[#0284C7] transition-colors";
+  const fieldClass = "w-full bg-[#FFFCF4] border border-[#C5B49A] rounded-xl px-2 py-2 text-[#201A14] font-mono text-center text-base placeholder-[#C5B49A] focus:border-[#0284C7] transition-colors";
 
   return (
     <div>
@@ -234,7 +234,7 @@ export default function LogSession() {
     </div>
   );
 
-  const inputClass = "w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-2.5 text-[#201A14] font-mono placeholder-[#C5B49A] focus:border-[#0284C7] transition-colors";
+  const inputClass = "w-full bg-[#FFFCF4] border border-[#C5B49A] rounded-xl px-4 py-2.5 text-[#201A14] font-mono placeholder-[#C5B49A] focus:border-[#0284C7] transition-colors";
   const labelClass = "block text-xs uppercase tracking-widest text-[#7A6B5B] mb-1.5";
 
   return (
@@ -256,7 +256,7 @@ export default function LogSession() {
 		    }}>
 		    <span style={{ fontSize: 15, opacity: discipline === d.key ? 1 : 0.4 }}>{d.icon}</span>
 		    <span style={{
-			  fontSize: 10,
+			  fontSize: 14,
 			  fontWeight: discipline === d.key ? 600 : 400,
 			  color: discipline === d.key ? d.color : '#aaa',
 			  letterSpacing: 0.2,

@@ -39,7 +39,7 @@ function CustomTooltip({ active, payload, label, formatValue }) {
 
 function StatCard({ label, value, sub, color }) {
   return (
-    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl p-4">
+    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl p-3">
       <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">{label}</p>
       <p className="text-xl font-bold font-mono mt-1" style={{ color }}>{value}</p>
       {sub && <p className="text-xs text-[#7A6B5B] mt-0.5">{sub}</p>}
@@ -90,7 +90,7 @@ function EditSessionModal({ session, onClose, onSaved }) {
         <h3 className="font-bold text-[#201A14] text-lg mb-4">Edit Session</h3>
 
         <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">Discipline</label>
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-3">
           {DISCIPLINES.map(d => (
             <button key={d} onClick={() => setType(d)}
               className={`py-2 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5
@@ -192,13 +192,13 @@ export default function Progress() {
       const config = RACE_CONFIG[type];
       const isBike = type === 'bike';
 
-      // Filter sessions per sessionFilter
+      // Filter sessions per combinedFilter
       let filtered;
-      if (sessionFilter === 'last3') {
+      if (combinedFilter === 'last3') {
         filtered = [...typeSessions]
           .sort((a, b) => new Date(b.start_date) - new Date(a.start_date))
           .slice(0, 3);
-      } else if (sessionFilter === 'top3') {
+      } else if (combinedFilter === 'top3') {
         filtered = [...typeSessions]
           .sort((a, b) => isBike
             ? (b.metrics.speed_kmh || 0) - (a.metrics.speed_kmh || 0)
@@ -242,7 +242,7 @@ export default function Progress() {
       { metric: 'Bike Speed', score: bestFor('bike') },
       { metric: 'Run Pace', score: bestFor('run') },
     ];
-  }, [activities, radarMode, sessionFilter]);
+  }, [activities, radarMode, combinedFilter]);
 
   const sessionsRaw = useMemo(() =>
     activities
@@ -452,7 +452,7 @@ export default function Progress() {
 		    }}>
 		    <span style={{ fontSize: 15, opacity: tab === t.key ? 1 : 0.4 }}>{t.icon}</span>
 		    <span style={{
-			  fontSize: 10,
+			  fontSize: 14,
 			  fontWeight: tab === t.key ? 600 : 400,
 			  color: tab === t.key ? t.color : '#aaa',
 			  letterSpacing: 0.2,
@@ -464,7 +464,7 @@ export default function Progress() {
 	  </div>
 	  
 	  {cumulativeSummaries[tab] && (
-	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
+	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
 		  <button
 		    onClick={() => setDisciplineExpanded(!disciplineExpanded)}
 		    className="w-full flex items-center justify-between"
@@ -492,7 +492,7 @@ export default function Progress() {
 	  {tab === 'combined' && (
 	    <div>
 		  {cumulativeSummaries.overall && (
-			<div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-4 mb-4">
+			<div className="bg-[#FFFCF4] border-2 border-[#0284C7]/30 shadow-sm rounded-2xl p-3 mb-3">
 			  <button
 				onClick={() => setOverallExpanded(!overallExpanded)}
 				className="w-full flex items-center justify-between"
@@ -516,7 +516,7 @@ export default function Progress() {
 			</div>
 		  )}  
 		  {/* Filter toggle */}
-		  <div className="flex gap-2 mb-4">
+		  <div className="flex gap-2 mb-2">
 		    {[
 			  { key: 'last3',   label: 'Last 3' },
 			  { key: 'top3',    label: 'Top 3' },
@@ -535,7 +535,7 @@ export default function Progress() {
 		  {combinedStats ? (
 		    <>
 			  {/* Total time card */}
-			  <div className="bg-[#FFFCF4] border-2 border-[#7C3AED]/30 rounded-2xl p-5 mb-4">
+			  <div className="bg-[#FFFCF4] border-2 border-[#7C3AED]/30 rounded-2xl p-3 mb-3">
 			    <p className="text-[10px] uppercase tracking-widest text-[#7A6B5B] mb-1">
 				  Projected Total Race Time
 			    </p>
@@ -582,9 +582,63 @@ export default function Progress() {
 				})()}
 			  </div>
 
+			  {/* Overview */}
+			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
+				<div className="flex items-center justify-between mb-2 gap-2">
+				  <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
+				  <div className="flex items-center gap-2">
+					<p className="text-[10px] text-[#7A6B5B]">
+					  % of {radarMode === 'ideal' ? 'ideal' : 'target'} achieved
+					</p>
+					<div className="flex gap-1">
+					  <button
+						onClick={() => setRadarMode('target')}
+						className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+						  ${radarMode === 'target'
+							? 'bg-[#0284C7] text-white'
+							: 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
+					  >
+						Target
+					  </button>
+					  <button
+						onClick={() => setRadarMode('ideal')}
+						className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+						  ${radarMode === 'ideal'
+							? 'bg-[#0284C7] text-white'
+							: 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
+					  >
+						Ideal
+					  </button>
+					</div>
+				  </div>
+				</div>
+
+				<ResponsiveContainer width="100%" height={170}>
+				  <RadarChart data={overviewData} outerRadius={78}>
+					<PolarGrid stroke="#E6D8BF" />
+					<PolarAngleAxis dataKey="metric" tick={{ fill: '#7A6B5B', fontSize: 11 }} />
+					<PolarRadiusAxis
+					  angle={90}
+					  domain={[0, 100]}
+					  tick={{ fill: '#7A6B5B', fontSize: 10 }}
+					  tickFormatter={(v) => `${v}%`}
+					/>
+					<Radar
+					  dataKey="score"
+					  stroke="#0284C7"
+					  fill="#0284C7"
+					  fillOpacity={0.18}
+					  strokeWidth={2}
+					/>
+					<Tooltip content={<CustomTooltip formatValue={(v) => `${Math.round(Number(v) || 0)}%`} />} />
+				  </RadarChart>
+				</ResponsiveContainer>
+			  </div>			  
+			  
+
 			  {/* Per-discipline breakdown */}
-			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
-			    <p className="text-xs uppercase tracking-widest text-[#7A6B5B] mb-3">Breakdown</p>
+			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
+			    <p className="text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">Breakdown</p>
 			    <div className="space-y-3">
 				  {[
 				    { key: 'swim', label: 'Swim 1500m', icon: '🏊', color: '#0284C7', data: combinedStats.swim },
@@ -621,77 +675,6 @@ export default function Progress() {
 			    </div>
 			  </div>
 			  
-			  {/* Overview */}
-			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-5">
-				<div className="flex items-center justify-between mb-3 gap-2">
-				  <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
-				  <div className="flex items-center gap-2">
-					<p className="text-[10px] text-[#7A6B5B]">
-					  % of {radarMode === 'ideal' ? 'ideal' : 'target'} achieved
-					</p>
-					<div className="flex gap-1">
-					  <button
-						onClick={() => setRadarMode('target')}
-						className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-						  ${radarMode === 'target'
-							? 'bg-[#0284C7] text-white'
-							: 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
-					  >
-						Target
-					  </button>
-					  <button
-						onClick={() => setRadarMode('ideal')}
-						className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-						  ${radarMode === 'ideal'
-							? 'bg-[#0284C7] text-white'
-							: 'bg-[#EFE2CB] text-[#7A6B5B]'}`}
-					  >
-						Ideal
-					  </button>
-					</div>
-				  </div>
-				</div>
-
-				<div className="flex gap-1.5 mb-3 flex-wrap">
-				  {[
-					{ key: 'all',   label: 'All' },
-					{ key: 'last3', label: 'Last 3' },
-					{ key: 'top3',  label: 'Top 3' },
-				  ].map(opt => (
-					<button
-					  key={opt.key}
-					  onClick={() => setSessionFilter(opt.key)}
-					  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
-						${sessionFilter === opt.key
-						  ? 'bg-[#0284C7] text-white border-[#0284C7]'
-						  : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
-					>
-					  {opt.label}
-					</button>
-				  ))}
-				</div>
-
-				<ResponsiveContainer width="100%" height={220}>
-				  <RadarChart data={overviewData} outerRadius={78}>
-					<PolarGrid stroke="#E6D8BF" />
-					<PolarAngleAxis dataKey="metric" tick={{ fill: '#7A6B5B', fontSize: 11 }} />
-					<PolarRadiusAxis
-					  angle={90}
-					  domain={[0, 100]}
-					  tick={{ fill: '#7A6B5B', fontSize: 10 }}
-					  tickFormatter={(v) => `${v}%`}
-					/>
-					<Radar
-					  dataKey="score"
-					  stroke="#0284C7"
-					  fill="#0284C7"
-					  fillOpacity={0.18}
-					  strokeWidth={2}
-					/>
-					<Tooltip content={<CustomTooltip formatValue={(v) => `${Math.round(Number(v) || 0)}%`} />} />
-				  </RadarChart>
-				</ResponsiveContainer>
-			  </div>			  
 			  
 		    </>
 		  ) : (
@@ -713,7 +696,7 @@ export default function Progress() {
       ) : (
         <>
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-3 gap-3 mb-3">
             <StatCard label="Sessions" value={sessions.length}
               sub={`${totalDist.toFixed(1)} ${distLabel} total`} color={color} />
             <StatCard label={tab === 'bike' ? 'Avg Speed' : 'Avg Pace'}
@@ -728,7 +711,7 @@ export default function Progress() {
           <div className="mb-3 rounded-2xl border border-[#E6D8BF] bg-[#FFFCF4] p-2 shadow-sm">
             <div className="grid grid-cols-2 gap-2">
               <button onClick={() => setMetric('pace')}
-                className={`min-h-12 rounded-xl px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
+                className={`min-h-10 rounded-xl px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
                   ${metric === 'pace'
                     ? 'bg-[#0284C7] text-white shadow-sm'
                     : 'text-[#7A6B5B] hover:bg-[#FFF8EA] hover:text-[#201A14]'}`}>
@@ -736,7 +719,7 @@ export default function Progress() {
                 <span>{paceWord}</span>
               </button>
               <button onClick={() => setMetric('distance')}
-                className={`min-h-12 rounded-xl px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
+                className={`min-h-10 rounded-xl px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
                   ${metric === 'distance'
                     ? 'bg-[#0284C7] text-white shadow-sm'
                     : 'text-[#7A6B5B] hover:bg-[#FFF8EA] hover:text-[#201A14]'}`}>
@@ -746,14 +729,13 @@ export default function Progress() {
             </div>
 
             {metric === 'pace' && (
-              <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-[#FFF8EA] border border-[#E6D8BF] px-2 py-2">
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-[#FFF8EA] border border-[#E6D8BF] px-2 py-1">
                 <span className="pl-2 text-[11px] font-semibold uppercase tracking-widest text-[#7A6B5B]">
-                  View
                 </span>
                 <div className="flex rounded-lg bg-[#EFE2CB] p-1">
                   {PACE_MODES.map(m => (
                     <button key={m.key} onClick={() => setPaceMode(m.key)}
-                      className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all
+                      className={`px-3 py-0.7 rounded-md text-[11px] font-semibold transition-all
                         ${paceMode === m.key
                           ? 'bg-[#FFFCF4] text-[#201A14] shadow-sm'
                           : 'text-[#7A6B5B] hover:text-[#201A14]'}`}>
@@ -761,26 +743,44 @@ export default function Progress() {
                     </button>
                   ))}
                 </div>
+				<div className="flex items-center gap-1 ml-auto">
+				  <button onClick={() => setChartType('bar')}
+					className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
+					  ${chartType === 'bar' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+					<BarChart3 size={13} />
+				  </button>
+				  <button onClick={() => setChartType('line')}
+					className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
+					  ${chartType === 'line' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+					<LineIcon size={13} />
+				  </button>
+				</div>
               </div>
             )}
-          </div>
 
-          {/* Chart type toggle: bar | line */}
-          <div className="flex items-center justify-end gap-1.5 mb-3">
-            <button onClick={() => setChartType('bar')}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
-                ${chartType === 'bar' ? 'bg-[#EFE2CB] text-[#201A14]' : 'text-[#9A8A76] hover:text-[#4F463B]'}`}>
-              <BarChart3 size={15} />
-            </button>
-            <button onClick={() => setChartType('line')}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
-                ${chartType === 'line' ? 'bg-[#EFE2CB] text-[#201A14]' : 'text-[#9A8A76] hover:text-[#4F463B]'}`}>
-              <LineIcon size={15} />
-            </button>
+			{metric === 'distance' && (
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-[#FFF8EA] border border-[#E6D8BF] px-2 py-1">
+                <span className="pl-2 text-[11px] font-semibold uppercase tracking-widest text-[#7A6B5B]">
+                </span>
+			    <div className="flex items-center justify-end gap-1 ml-auto">
+				  <button onClick={() => setChartType('bar')}
+				    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
+					  ${chartType === 'bar' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+				    <BarChart3 size={13} />
+				  </button>
+				  <button onClick={() => setChartType('line')}
+				    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
+					  ${chartType === 'line' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+				    <LineIcon size={13} />
+				  </button>
+			    </div>
+			  </div>
+			)}
+
           </div>
 
           {/* Main chart card */}
-          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4 mb-4">
+          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
 			<div className="flex items-center justify-between mb-4">
 			  <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">
 				{metric === 'distance' ? 'Distance' : `${paceWord} · ${paceMode === 'extrapolated' ? 'Extrapolated' : 'Actual'}`}
@@ -804,7 +804,7 @@ export default function Progress() {
 			  )}
 			</div>
 
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={170}>
               {chartType === 'bar' ? (
                 <BarChart data={chartData} barSize={20}>
                   <CartesianGrid stroke="transparent" vertical={false} horizontal={false} />
@@ -845,7 +845,7 @@ export default function Progress() {
           </div>
 
           {/* Session history */}
-          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-4">
+          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3">
             <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
               <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Session History</p>
               <div className="flex gap-1.5">
