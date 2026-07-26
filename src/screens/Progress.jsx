@@ -632,7 +632,7 @@ export default function Progress() {
                           )}
                         </div>
                         {data && (
-                          <p className={`text-[10px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                          <p className={`text-[14px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
                             {pct}%
                           </p>
                         )}
@@ -640,9 +640,9 @@ export default function Progress() {
 
                       {/* Progress bar */}
                       {data && (
-                        <div className="relative h-1.5 rounded-full bg-[#E6D8BF] overflow-hidden">
+                        <div className="relative h-1.5 rounded-full bg-[#EDE0CC] overflow-hidden">
                           <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%`, backgroundColor: '#7A5C38', opacity: 0.9 }} />
+                            style={{ width: `${pct}%`, backgroundColor: '#C4956A' }} />
                           <div className="absolute right-0 top-0 h-full w-0.5"
                             style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
                         </div>
@@ -650,7 +650,7 @@ export default function Progress() {
 
                       {/* Benchmark time — left aligned below slider */}
                       {data && (
-                        <p className={`text-[11px] mt-0.5 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                        <p className={`text-[12px] mt-0.5 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
                           {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
                         </p>
                       )}
