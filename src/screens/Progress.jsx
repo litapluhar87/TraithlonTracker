@@ -588,91 +588,83 @@ export default function Progress() {
 			    })()}
 			  </div>
 
-			{/* Overview + Breakdown side by side */}
+			{/* Overview + Breakdown */}
 			<div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
 			  {/* Header with Target/Ideal toggle */}
 			  <div className="flex items-center justify-between mb-2">
 				<p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
-				<div className="flex items-center gap-2">
-				  <p className="text-[10px] text-[#7A6B5B]">
-					% of {radarMode === 'ideal' ? 'ideal' : 'target'} achieved
-				  </p>
-				  <div className="flex gap-1">
-					<button onClick={() => setRadarMode('target')}
-					  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-						${radarMode === 'target' ? 'bg-[#0284C7] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
-					  Target
-					</button>
-					<button onClick={() => setRadarMode('ideal')}
-					  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-						${radarMode === 'ideal' ? 'bg-[#0284C7] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
-					  Ideal
-					</button>
-				  </div>
+				<div className="flex gap-1">
+				  <button onClick={() => setRadarMode('target')}
+					className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+					  ${radarMode === 'target' ? 'bg-[#0284C7] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
+					Target
+				  </button>
+				  <button onClick={() => setRadarMode('ideal')}
+					className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+					  ${radarMode === 'ideal' ? 'bg-[#0284C7] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
+					Ideal
+				  </button>
 				</div>
 			  </div>
 
-			  {/* Side by side layout */}
-			  <div className="flex gap-2 items-start">
-				{/* Radar — left side */}
-				<div style={{ width: '45%', flexShrink: 0 }}>
-				  <ResponsiveContainer width="100%" height={160}>
-					<RadarChart data={overviewData} outerRadius={62}>
-					  <PolarGrid stroke="#E6D8BF" />
-					  <PolarAngleAxis dataKey="metric" tick={{ fill: '#7A6B5B', fontSize: 9 }} />
-					  <PolarRadiusAxis
-						angle={90}
-						domain={[0, 100]}
-						tick={{ fill: '#7A6B5B', fontSize: 8 }}
-						tickFormatter={(v) => `${v}%`}
-					  />
-					  <Radar
-						dataKey="score"
-						stroke="#0284C7"
-						fill="#0284C7"
-						fillOpacity={0.18}
-						strokeWidth={2}
-					  />
-					  <Tooltip content={<CustomTooltip formatValue={(v) => `${Math.round(Number(v) || 0)}%`} />} />
-					</RadarChart>
-				  </ResponsiveContainer>
-				</div>
+			  {/* Breakdown with progress bars — full width, no side-by-side */}
+			  {[
+				{ key: 'swim', label: 'Swim', icon: '🏊', color: '#0284C7', data: combinedStats.swim },
+				{ key: 'bike', label: 'Bike', icon: '🚴', color: '#EA580C', data: combinedStats.bike },
+				{ key: 'run',  label: 'Run',  icon: '🏃', color: '#16A34A', data: combinedStats.run },
+			  ].map(({ key, label, icon, color: dColor, data }) => {
+				const benchmarkS     = data ? (radarMode === 'ideal' ? data.bestS : data.targetS) : null;
+				const pct            = data && benchmarkS ? Math.min(100, Math.round((benchmarkS / data.avgExtrap_s) * 100)) : 0;
+				const isOnTrack      = data ? data.avgExtrap_s <= benchmarkS : false;
+				const benchmarkLabel = radarMode === 'ideal' ? 'Ideal' : 'Target';
 
-				{/* Breakdown — right side */}
-				<div style={{ width: '55%' }} className="pt-1">
-				  {[
-					{ key: 'swim', label: 'Swim', icon: '🏊', color: '#0284C7', data: combinedStats.swim },
-					{ key: 'bike', label: 'Bike', icon: '🚴', color: '#EA580C', data: combinedStats.bike },
-					{ key: 'run',  label: 'Run',  icon: '🏃', color: '#16A34A', data: combinedStats.run },
-				  ].map(({ key, label, icon, color: dColor, data }) => (
-					<div key={key} className="flex items-center justify-between py-2 border-b border-[#E6D8BF] last:border-0">
-					  <div className="flex items-center gap-1.5">
+				return (
+				  <div key={key} className="py-2">
+					<div className="flex items-center mb-1">
+					  {/* Left — icon + label */}
+					  <div className="flex items-center gap-1.5 w-1/3">
 						<span className="text-sm">{icon}</span>
 						<p className="text-xs text-[#201A14] font-medium">{label}</p>
 					  </div>
-					  <div className="text-right">
-						{data ? (() => {
-						  const benchmarkS  = radarMode === 'ideal' ? data.bestS : data.targetS;
-						  const isOnTrack   = data.avgExtrap_s <= benchmarkS;
-						  const benchmarkLabel = radarMode === 'ideal' ? 'Ideal' : 'Target';
-						  return (
-							<>
-							  <p className="text-xs font-mono font-bold" style={{ color: dColor }}>
-								{formatDuration(data.avgExtrap_s)}
-							  </p>
-							  <p className={`text-[10px] ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-								{isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
-							  </p>
-							</>
-						  );
-						})() : (
+					  {/* Center — actual time */}
+					  <div className="flex-1 text-center">
+						{data ? (
+						  <p className="text-xs font-mono font-bold" style={{ color: dColor }}>
+							{formatDuration(data.avgExtrap_s)}
+						  </p>
+						) : (
 						  <p className="text-[10px] text-[#7A6B5B]">No data</p>
 						)}
 					  </div>
+					  {/* Right — % */}
+					  <div className="w-1/3 text-right">
+						{data && (
+						  <p className={`text-[10px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+							{pct}%
+						  </p>
+						)}
+					  </div>
 					</div>
-				  ))}
-				</div>
-			  </div>
+
+					{data && (
+					  <div className="relative h-1.5 rounded-full bg-[#E6D8BF] overflow-hidden">
+						<div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
+						  style={{ width: `${pct}%`, backgroundColor: dColor, opacity: 0.85 }} />
+						<div className="absolute right-0 top-0 h-full w-0.5"
+						  style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
+					  </div>
+					)}
+
+					{data && (
+					  <p className={`text-[9px] text-center mt-0.5 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+						{isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
+					  </p>
+					)}
+
+					{/*{key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />}*/}
+				  </div>
+				);
+			  })}
 			</div>
 			  
 			  
