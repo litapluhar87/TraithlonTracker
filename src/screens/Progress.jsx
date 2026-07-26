@@ -638,15 +638,6 @@ export default function Progress() {
                         )}
                       </div>
 
-                      {/* Progress bar */}
-                      {data && (
-                        <div className="relative h-1.5 rounded-full bg-[#EDE0CC] overflow-hidden">
-                          <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%`, backgroundColor: '#C4956A' }} />
-                          <div className="absolute right-0 top-0 h-full w-0.5"
-                            style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
-                        </div>
-                      )}
 
                       {/* Benchmark time — left aligned below slider */}
                       {data && (
@@ -656,6 +647,16 @@ export default function Progress() {
                       )}
 
                       {key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />} 
+
+                      {/* Progress bar */}
+                      {data && (
+                        <div className="relative h-1.5 rounded-full bg-[#EDE0CC] overflow-hidden">
+                          <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, backgroundColor: '#C4956A' }} />
+                          <div className="absolute right-0 top-0 h-full w-0.5"
+                            style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
+                        </div>
+                      )}
                     </div>
 				);
 			  })}
