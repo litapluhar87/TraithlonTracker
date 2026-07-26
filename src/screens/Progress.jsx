@@ -619,50 +619,44 @@ export default function Progress() {
 				const benchmarkLabel = radarMode === 'ideal' ? 'Ideal' : 'Target';
 
 				return (
-				  <div key={key} className="py-2">
-					<div className="flex items-center mb-1">
-					  {/* Left — icon + label */}
-					  <div className="flex items-center gap-1.5 w-1/3">
-						<span className="text-sm">{icon}</span>
-						<p className="text-xs text-[#201A14] font-medium">{label}</p>
-					  </div>
-					  {/* Center — actual time */}
-					  <div className="flex-1 text-center">
-						{data ? (
-						  <p className="text-xs font-mono font-bold" style={{ color: dColor }}>
-							{formatDuration(data.avgExtrap_s)}
-						  </p>
-						) : (
-						  <p className="text-[10px] text-[#7A6B5B]">No data</p>
-						)}
-					  </div>
-					  {/* Right — % */}
-					  <div className="w-1/3 text-right">
-						{data && (
-						  <p className={`text-[10px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-							{pct}%
-						  </p>
-						)}
-					  </div>
-					</div>
+					<div key={key} className="py-2">
+                      {/* Top row: icon + label + actual time | % */}
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm">{icon}</span>
+                          <p className="text-xs text-[#201A14] font-medium">{label}</p>
+                          {data && (
+                            <p className="text-xs font-mono font-bold text-[#5C3D1E] ml-1">
+                              {formatDuration(data.avgExtrap_s)}
+                            </p>
+                          )}
+                        </div>
+                        {data && (
+                          <p className={`text-[10px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                            {pct}%
+                          </p>
+                        )}
+                      </div>
 
-					{data && (
-					  <div className="relative h-1.5 rounded-full bg-[#E6D8BF] overflow-hidden">
-						<div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-						  style={{ width: `${pct}%`, backgroundColor: dColor, opacity: 0.85 }} />
-						<div className="absolute right-0 top-0 h-full w-0.5"
-						  style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
-					  </div>
-					)}
+                      {/* Progress bar */}
+                      {data && (
+                        <div className="relative h-1.5 rounded-full bg-[#E6D8BF] overflow-hidden">
+                          <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, backgroundColor: '#7A5C38', opacity: 0.9 }} />
+                          <div className="absolute right-0 top-0 h-full w-0.5"
+                            style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
+                        </div>
+                      )}
 
-					{data && (
-					  <p className={`text-[9px] text-center mt-0.5 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-						{isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
-					  </p>
-					)}
+                      {/* Benchmark time — left aligned below slider */}
+                      {data && (
+                        <p className={`text-[11px] mt-0.5 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                          {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
+                        </p>
+                      )}
 
-					{/*{key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />}*/}
-				  </div>
+                      {key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />} 
+                    </div>
 				);
 			  })}
 			</div>
