@@ -623,7 +623,7 @@ export default function Progress() {
                       <div className="flex items-start gap-3">
                         {/* Left — discipline pill */}
                         <div className="flex flex-col items-center justify-center rounded-xl px-2 py-2 flex-shrink-0"
-                          style={{ backgroundColor: `${dColor}18`, border: `1px solid ${dColor}40`, minWidth: '60px' }}>
+                          style={{ backgroundColor: `${dColor}18`, border: '1px solid #7C3AED40', minWidth: '60px' }}>
                           <span className="text-base leading-none">{icon}</span>
                           <p className="text-[11px] font-semibold mt-0.5" style={{ color: dColor }}>{label}</p>
                         </div>
@@ -642,6 +642,11 @@ export default function Progress() {
                                 </p>
                               </div>
 
+                              {/* Benchmark*/}
+                              <p className={`text-[10px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                                {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
+                              </p>
+							  
                               {/* Slider */}
                               <div className="relative h-0.5 rounded-full bg-[#DDD6FE] overflow-hidden">
                                 <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
@@ -650,10 +655,6 @@ export default function Progress() {
                                   style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626' }} />
                               </div>
 
-                              {/* Benchmark below slider */}
-                              <p className={`text-[10px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-                                {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
-                              </p>
                             </>
                           ) : (
                             <p className="text-[10px] text-[#7A6B5B] pt-1">No data</p>
