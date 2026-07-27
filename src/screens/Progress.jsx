@@ -620,42 +620,48 @@ export default function Progress() {
 
 				return (
 					<div key={key} className="py-2">
-                      {/* Top row: icon + label + actual time | % */}
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm">{icon}</span>
-                          <p className="text-xs text-[#201A14] font-medium">{label}</p>
-                          {data && (
-                            <p className="text-xs font-mono font-bold text-[#5C3D1E] ml-1">
-                              {formatDuration(data.avgExtrap_s)}
-                            </p>
+                      <div className="flex items-start gap-3">
+                        {/* Left — discipline pill */}
+                        <div className="flex flex-col items-center justify-center rounded-xl px-2 py-2 flex-shrink-0"
+                          style={{ backgroundColor: `${dColor}18`, border: `1px solid ${dColor}40`, minWidth: '60px' }}>
+                          <span className="text-base leading-none">{icon}</span>
+                          <p className="text-[11px] font-semibold mt-0.5" style={{ color: dColor }}>{label}</p>
+                        </div>
+
+                        {/* Right — time, %, slider, benchmark */}
+                        <div className="flex-1 pt-0.5">
+                          {data ? (
+                            <>
+                              {/* Time + % on same line */}
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="text-xs font-mono font-bold text-[#5C3D1E]">
+                                  {formatDuration(data.avgExtrap_s)}
+                                </p>
+                                <p className={`text-[11px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                                  {pct}%
+                                </p>
+                              </div>
+
+                              {/* Slider */}
+                              <div className="relative h-0.5 rounded-full bg-[#DDD6FE] overflow-hidden">
+                                <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${pct}%`, backgroundColor: '#7C3AED' }} />
+                                <div className="absolute right-0 top-0 h-full w-0.5"
+                                  style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626' }} />
+                              </div>
+
+                              {/* Benchmark below slider */}
+                              <p className={`text-[10px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                                {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-[10px] text-[#7A6B5B] pt-1">No data</p>
                           )}
                         </div>
-                        {data && (
-                          <p className={`text-[12px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-                            {pct}%
-                          </p>
-                        )}
                       </div>
 
-
-					  {data && (
-					    <p className={`text-[12px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-						  {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
-					    </p>
-					  )}
-
-                      {key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />} 
-
-                      {/* Progress bar */}
-                      {data && (
-                        <div className="relative h-0.5 rounded-full bg-[#DDD6FE] overflow-hidden">
-                          <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%`, backgroundColor: '#7C3AED' }} />
-                          <div className="absolute right-0 top-0 h-full w-0.5"
-                            style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626' }} />
-                        </div>
-                      )}
+                      {/* {key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />} */}
                     </div>
 				);
 			  })}
