@@ -824,7 +824,7 @@ export default function Progress() {
 				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="3 3" strokeOpacity={0.7} strokeWidth={1.5} />
 				  )}
                   <Line type="monotone" dataKey="value" stroke={valueColor}
-                    strokeWidth={2.5} dot={{ fill: valueColor, r: 4 }} activeDot={{ r: 6 }} />
+                    strokeWidth={2} dot={{ fill: valueColor, r: 2 }} activeDot={{ r: 4 }} />
                 </LineChart>
               )}
             </ResponsiveContainer>
