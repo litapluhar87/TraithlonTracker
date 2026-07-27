@@ -595,14 +595,14 @@ export default function Progress() {
 				<p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
 				<div className="flex gap-1">
 				  <button onClick={() => setRadarMode('target')}
-					className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-					  ${radarMode === 'target' ? 'bg-[#0284C7] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
-					Target
+				    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+					  ${radarMode === 'target' ? 'bg-[#7C3AED] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
+				    Target
 				  </button>
 				  <button onClick={() => setRadarMode('ideal')}
-					className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-					  ${radarMode === 'ideal' ? 'bg-[#0284C7] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
-					Ideal
+				    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
+					  ${radarMode === 'ideal' ? 'bg-[#7C3AED] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
+				    Ideal
 				  </button>
 				</div>
 			  </div>
@@ -632,29 +632,28 @@ export default function Progress() {
                           )}
                         </div>
                         {data && (
-                          <p className={`text-[14px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                          <p className={`text-[12px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
                             {pct}%
                           </p>
                         )}
                       </div>
 
 
-                      {/* Benchmark time — left aligned below slider */}
-                      {data && (
-                        <p className={`text-[12px] mt-0.5 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-                          {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
-                        </p>
-                      )}
+					  {data && (
+					    <p className={`text-[12px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+						  {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
+					    </p>
+					  )}
 
                       {key !== 'run' && <div className="mt-2 border-b border-[#E6D8BF]" />} 
 
                       {/* Progress bar */}
                       {data && (
-                        <div className="relative h-1.5 rounded-full bg-[#EDE0CC] overflow-hidden">
+                        <div className="relative h-0.5 rounded-full bg-[#DDD6FE] overflow-hidden">
                           <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%`, backgroundColor: '#C4956A' }} />
+                            style={{ width: `${pct}%`, backgroundColor: '#7C3AED' }} />
                           <div className="absolute right-0 top-0 h-full w-0.5"
-                            style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626', opacity: 0.6 }} />
+                            style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626' }} />
                         </div>
                       )}
                     </div>
