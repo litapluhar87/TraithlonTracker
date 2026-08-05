@@ -154,6 +154,7 @@ export default function Progress() {
   const [sessionFilter, setSessionFilter] = useState('all'); // all | last3 | top3 | avg
   const [combinedFilter, setCombinedFilter] = useState('last3');
   const [bikeFilter, setBikeFilter] = useState('outdoor'); // outdoor | indoor
+  const [swimFilter, setSwimFilter] = useState('pool'); //pool | openwater
   
   const [cumulativeSummaries, setCumulativeSummaries] = useState({});
 
@@ -256,6 +257,13 @@ export default function Progress() {
 	  });
 	}
 
+	if (tab === 'swim') {
+	  filtered = filtered.filter(a => {
+		const st = a.strava_data?.swim_type;
+		return swimFilter === 'open' ? st === 'open' : st !== 'open';
+	  });
+	}
+	
     return filtered.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
   }, [activities, tab, bikeFilter]);
 
@@ -291,6 +299,7 @@ export default function Progress() {
 	    .filter(a => {
 		  if (a.type !== discipline || !a.distance_m || !a.duration_s) return false;
 		  if (discipline === 'bike' && a.strava_data?.bike_type === 'indoor') return false;
+		  if (discipline === 'swim' && a.strava_data?.swim_type === 'open') return false;
           return true;
         })
 	    .sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
@@ -452,7 +461,7 @@ export default function Progress() {
 	    {TABS.map(t => (
 		  <button
 		    key={t.key}
-		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); setBikeFilter('outdoor'); }}
+		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); setBikeFilter('outdoor'); setSwimFilter('pool'); }}
 		    className="flex-1 flex flex-col items-center pt-1.5 pb-1 gap-0.5 transition-all"
 		    style={{
 			  borderTop:    tab === t.key ? `3px solid ${t.color}` : '3px solid transparent',
@@ -490,6 +499,27 @@ export default function Progress() {
 			    ? 'bg-[#EA580C] text-white border-[#EA580C]'
 			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
 		    🏠 Indoor
+		  </button>
+	    </div>
+	  )}	  
+	  
+	  {tab === 'swim' && (
+	    <div className="flex gap-1 mb-2">
+		  <button onClick={() => setSwimFilter('pool')}
+		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+			  ${swimFilter === 'pool'
+			    ? 'border-[#0284C7] text-white'
+			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
+		    style={swimFilter === 'pool' ? { backgroundColor: '#0284C7' } : {}}>
+		    🏊 Pool
+		  </button>
+		  <button onClick={() => setSwimFilter('open')}
+		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+			  ${swimFilter === 'open'
+			    ? 'border-[#0284C7] text-white'
+			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
+		    style={swimFilter === 'open' ? { backgroundColor: '#0284C7' } : {}}>
+		    🌊 Open Water
 		  </button>
 	    </div>
 	  )}	  
