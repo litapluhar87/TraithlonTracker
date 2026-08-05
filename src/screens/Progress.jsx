@@ -153,6 +153,7 @@ export default function Progress() {
   const [radarMode, setRadarMode] = useState('target');    // target | ideal
   const [sessionFilter, setSessionFilter] = useState('all'); // all | last3 | top3 | avg
   const [combinedFilter, setCombinedFilter] = useState('last3');
+  const [bikeFilter, setBikeFilter] = useState('outdoor'); // outdoor | indoor
   
   const [cumulativeSummaries, setCumulativeSummaries] = useState({});
 
@@ -244,12 +245,19 @@ export default function Progress() {
     ];
   }, [activities, radarMode, combinedFilter]);
 
-  const sessionsRaw = useMemo(() =>
-    activities
-      .filter(a => a.type === tab)
-      .sort((a, b) => new Date(a.start_date) - new Date(b.start_date)),
-    [activities, tab]
-  );
+  const sessionsRaw = useMemo(() => {
+    let filtered = activities.filter(a => a.type === tab);
+
+    // Apply indoor/outdoor filter for bike tab
+	if (tab === 'bike') {
+	  filtered = filtered.filter(a => {
+		const bt = a.strava_data?.bike_type;
+		return bikeFilter === 'indoor' ? bt === 'indoor' : bt !== 'indoor';
+	  });
+	}
+
+    return filtered.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+  }, [activities, tab, bikeFilter]);
 
   const sessions = useMemo(() => sessionsRaw.map(a => {
     let pace = null, extrapolated_s = null, onTrack = false;
@@ -279,9 +287,13 @@ export default function Progress() {
     const RACE_BEST_S    = { swim: 3300, bike: 6300, run: 4800 };
 
     const getExtrapForDisc = (discipline) => {
-      const disc_sessions = activities
-        .filter(a => a.type === discipline && a.distance_m && a.duration_s)
-        .sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
+	  const disc_sessions = activities
+	    .filter(a => {
+		  if (a.type !== discipline || !a.distance_m || !a.duration_s) return false;
+		  if (discipline === 'bike' && a.strava_data?.bike_type === 'indoor') return false;
+          return true;
+        })
+	    .sort((a, b) => new Date(b.start_date) - new Date(a.start_date));
 
       if (!disc_sessions.length) return null;
 
@@ -440,7 +452,7 @@ export default function Progress() {
 	    {TABS.map(t => (
 		  <button
 		    key={t.key}
-		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); }}
+		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); setBikeFilter('outdoor'); }}
 		    className="flex-1 flex flex-col items-center pt-1.5 pb-1 gap-0.5 transition-all"
 		    style={{
 			  borderTop:    tab === t.key ? `3px solid ${t.color}` : '3px solid transparent',
@@ -462,6 +474,25 @@ export default function Progress() {
 		  </button>
 	    ))}
 	  </div>
+	  
+	  {tab === 'bike' && (
+	    <div className="flex gap-1 mb-2">
+		  <button onClick={() => setBikeFilter('outdoor')}
+		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+			  ${bikeFilter === 'outdoor' || bikeFilter === 'all'
+			    ? 'bg-[#EA580C] text-white border-[#EA580C]'
+			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
+		    ☀️ Outdoor
+		  </button>
+		  <button onClick={() => setBikeFilter('indoor')}
+		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+			  ${bikeFilter === 'indoor'
+			    ? 'bg-[#EA580C] text-white border-[#EA580C]'
+			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
+		    🏠 Indoor
+		  </button>
+	    </div>
+	  )}	  
 	  
 	  {cumulativeSummaries[tab] && (
 	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
