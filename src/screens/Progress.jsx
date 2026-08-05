@@ -253,19 +253,23 @@ export default function Progress() {
 	if (tab === 'bike') {
 	  filtered = filtered.filter(a => {
 		const bt = a.strava_data?.bike_type;
-		return bikeFilter === 'indoor' ? bt === 'indoor' : bt !== 'indoor';
+		if (bikeFilter === 'indoor') return bt === 'indoor';
+		// Outdoor: include explicitly tagged outdoor, OR older sessions with no tag (default to outdoor)
+		return bt === 'outdoor' || bt === null || bt === undefined;
 	  });
 	}
 
 	if (tab === 'swim') {
 	  filtered = filtered.filter(a => {
 		const st = a.strava_data?.swim_type;
-		return swimFilter === 'open' ? st === 'open' : st !== 'open';
+		if (swimFilter === 'open') return st === 'open';
+		// Pool: include sessions explicitly tagged pool, OR older sessions with no tag (default to pool)
+		return st === 'pool' || st === null || st === undefined;
 	  });
 	}
 	
     return filtered.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-  }, [activities, tab, bikeFilter]);
+  }, [activities, tab, bikeFilter, swimFilter]);
 
   const sessions = useMemo(() => sessionsRaw.map(a => {
     let pace = null, extrapolated_s = null, onTrack = false;
