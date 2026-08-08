@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import {
@@ -8,21 +8,34 @@ import {
 } from '../utils/raceConfig';
 import { api } from '../utils/api';
 
+// ── Discipline config ─────────────────────────────────────────────────────────
 const DISCIPLINES = [
-  { key: 'swim',  label: 'Swim',  icon: '🏊', color: '#0284C7' },
-  { key: 'bike',  label: 'Bike',  icon: '🚴', color: '#EA580C' },
-  { key: 'run',   label: 'Run',   icon: '🏃', color: '#16A34A' },
+  {
+    key: 'swim', label: 'Swim', icon: '🏊',
+    color: '#22C3FF', colorDeep: '#0B6E9C',
+    glow: 'rgba(34,195,255,0.15)',
+  },
+  {
+    key: 'bike', label: 'Bike', icon: '🚴',
+    color: '#FFB020', colorDeep: '#B4741A',
+    glow: 'rgba(255,176,32,0.15)',
+  },
+  {
+    key: 'run', label: 'Run', icon: '🏃',
+    color: '#FF3D71', colorDeep: '#B01E4C',
+    glow: 'rgba(255,61,113,0.15)',
+  },
 ];
 
 const FEEL_EMOJI = ['😓', '😐', '🙂', '😊', '🔥'];
 
-function DurationInput({ label, value, onChange }) {
-  // Parse incoming hh:mm:ss or mm:ss string into parts
+// ── Duration input ────────────────────────────────────────────────────────────
+function DurationInput({ value, onChange, accentColor }) {
   const parse = (v) => {
     if (!v) return { h: '', m: '', s: '' };
     const parts = v.split(':').map(p => p.replace(/^0+/, '') || '');
     if (parts.length === 3) return { h: parts[0], m: parts[1], s: parts[2] };
-    if (parts.length === 2) return { h: '',       m: parts[0], s: parts[1] };
+    if (parts.length === 2) return { h: '', m: parts[0], s: parts[1] };
     return { h: '', m: '', s: '' };
   };
 
@@ -36,44 +49,48 @@ function DurationInput({ label, value, onChange }) {
     const mm = parseInt(mv) || 0;
     const ss = parseInt(sv) || 0;
     if (hh === 0 && mm === 0 && ss === 0) { onChange(''); return; }
-    onChange(`${hh}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`);
+    onChange(`${hh}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`);
   };
 
-  const fieldClass = "w-full bg-[#FFFCF4] border border-[#C5B49A] rounded-xl px-2 py-2 text-[#201A14] font-mono text-center text-base placeholder-[#C5B49A] focus:border-[#0284C7] transition-colors";
+  const durFieldClass = "w-full bg-[#131A2C] border border-[#242E48] rounded-xl text-center font-mono text-xl font-bold text-[#F3F5FC] py-3 px-2 outline-none transition-all";
 
   return (
     <div>
-      <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">{label}</label>
-      <div className="grid grid-cols-3 gap-2 items-center">
-        <div className="text-center">
-          <input type="number" inputMode="numeric" min="0" max="23"
-            value={h} placeholder="0"
-            onChange={e => { setH(e.target.value); emit(e.target.value, m, s); }}
-            className={fieldClass} />
-          <p className="text-[10px] text-[#7A6B5B] mt-0.5">MM</p>
-        </div>
-        <div className="text-center">
-          <input type="number" inputMode="numeric" min="0" max="59"
-            value={m} placeholder="00"
-            onChange={e => { setM(e.target.value); emit(h, e.target.value, s); }}
-            className={fieldClass} />
-          <p className="text-[10px] text-[#5C6688] mt-1">MM</p>
-        </div>
-        <div className="text-center">
-          <input type="number" inputMode="numeric" min="0" max="59"
-            value={s} placeholder="00"
-            onChange={e => { setS(e.target.value); emit(h, m, e.target.value); }}
-            className={fieldClass} />
-          <p className="text-[10px] text-[#7A6B5B] mt-0.5">SS</p>
-        </div>
+      <label className="block text-[10px] font-bold uppercase tracking-widest text-[#5C6688] mb-2">
+        Duration
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { val: h, set: setH, placeholder: '0',  label: 'HH', min: 0, max: 23 },
+          { val: m, set: setM, placeholder: '00', label: 'MM', min: 0, max: 59 },
+          { val: s, set: setS, placeholder: '00', label: 'SS', min: 0, max: 59 },
+        ].map(({ val, set, placeholder, label, min, max }, i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <input
+              type="number" inputMode="numeric"
+              min={min} max={max}
+              value={val} placeholder={placeholder}
+              onChange={e => {
+                set(e.target.value);
+                const vals = [h, m, s];
+                vals[i] = e.target.value;
+                emit(vals[0], vals[1], vals[2]);
+              }}
+              className={durFieldClass}
+              style={{ '--tw-ring-color': accentColor }}
+            />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#5C6688]">{label}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// Live metrics card shown after valid input
-function MetricsCard({ discipline, distanceM, durationS }) {
+// ── Metrics card ──────────────────────────────────────────────────────────────
+function MetricsCard({ discipline, distanceM, durationS, accentColor }) {
   if (!distanceM || !durationS || durationS < 10) return null;
+
   let metrics = null;
   let paceLabel = '';
   let paceValue = '';
@@ -82,47 +99,52 @@ function MetricsCard({ discipline, distanceM, durationS }) {
   if (discipline === 'swim') {
     metrics = calcSwim(distanceM, durationS);
     paceLabel = 'Pace'; paceValue = `${formatPace(metrics?.pace_s)} /100m`;
-    extraLabel = 'Extrapolated 1500m';
+    extraLabel = 'Projected 1500m';
   } else if (discipline === 'bike') {
     metrics = calcBike(distanceM, durationS);
     paceLabel = 'Speed'; paceValue = `${metrics?.speed_kmh?.toFixed(1)} km/h`;
-    extraLabel = 'Extrapolated 40km';
+    extraLabel = 'Projected 40km';
   } else if (discipline === 'run') {
     metrics = calcRun(distanceM, durationS);
     paceLabel = 'Pace'; paceValue = `${formatPace(metrics?.pace_s)} /km`;
-    extraLabel = 'Extrapolated 10km';
+    extraLabel = 'Projected 10km';
   }
   if (!metrics) return null;
 
   const deltaAbs = Math.abs(metrics.delta_s);
   const deltaStr = `${metrics.onTrack ? '-' : '+'}${formatDuration(deltaAbs)} vs target`;
+  const isOk = metrics.onTrack;
 
   return (
-    <div className={`rounded-xl border p-4 mt-4
-      ${metrics.onTrack
-        ? 'bg-[#16A34A]/5 border-[#16A34A]/30'
-        : 'bg-[#F87171]/5 border-[#F87171]/30'}`}>
+    <div
+      className="rounded-2xl border p-4 mt-2"
+      style={{
+        background: isOk ? 'rgba(51,225,163,0.06)' : 'rgba(255,92,114,0.06)',
+        borderColor: isOk ? 'rgba(51,225,163,0.25)' : 'rgba(255,92,114,0.25)',
+      }}
+    >
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">{paceLabel}</p>
-          <p className="text-lg font-bold font-mono text-[#201A14] mt-0.5">{paceValue}</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-[#5C6688]">{paceLabel}</p>
+          <p className="text-base font-bold font-mono text-[#F3F5FC] mt-1">{paceValue}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">{extraLabel}</p>
-          <p className="text-lg font-bold font-mono text-[#201A14] mt-0.5">{formatDuration(metrics.extrapolated_s)}</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-[#5C6688]">{extraLabel}</p>
+          <p className="text-base font-bold font-mono text-[#F3F5FC] mt-1">{formatDuration(metrics.extrapolated_s)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">Status</p>
-          <p className={`text-sm font-bold mt-0.5 ${metrics.onTrack ? 'text-[#16A34A]' : 'text-[#F87171]'}`}>
-            {metrics.onTrack ? '✅ On Track' : '⚠️ Behind'}
+          <p className="text-[9px] font-bold uppercase tracking-widest text-[#5C6688]">Status</p>
+          <p className={`text-sm font-bold mt-1 ${isOk ? 'text-[#33E1A3]' : 'text-[#FF5C72]'}`}>
+            {isOk ? '✅ On Track' : '⚠️ Behind'}
           </p>
-          <p className="text-[10px] text-[#7A6B5B]">{deltaStr}</p>
+          <p className="text-[9px] text-[#5C6688] mt-0.5">{deltaStr}</p>
         </div>
       </div>
     </div>
   );
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
 export default function LogSession() {
   const { user, addActivity } = useApp();
   const navigate = useNavigate();
@@ -150,9 +172,11 @@ export default function LogSession() {
   const [runDist, setRunDist] = useState('');
   const [runDur, setRunDur] = useState('');
 
-  const activeColor = DISCIPLINES.find(d => d.key === discipline)?.color || '#0284C7';
+  const activeDisc = DISCIPLINES.find(d => d.key === discipline);
+  const accentColor = activeDisc?.color || '#22C3FF';
+  const accentDeep  = activeDisc?.colorDeep || '#0B6E9C';
+  const activeIndex = DISCIPLINES.findIndex(d => d.key === discipline);
 
-  // Compute distance_m and duration_s for metrics card
   const getDistM = () => {
     if (discipline === 'swim') return parseFloat(swimDist) || 0;
     if (discipline === 'bike') return (parseFloat(bikeDist) || 0) * 1000;
@@ -221,163 +245,197 @@ export default function LogSession() {
     setSaving(false);
   };
 
-  const Toggle = ({ value, onChange, opts }) => (
-    <div className="flex bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl p-1">
+  // ── Reusable styled input ──
+  const inp = "w-full bg-[#131A2C] border border-[#242E48] rounded-xl px-4 py-3 text-[#F3F5FC] font-mono text-sm placeholder-[#5C6688] outline-none transition-all";
+  const lbl = "block text-[10px] font-bold uppercase tracking-widest text-[#5C6688] mb-2";
+
+  // ── Type toggle ──
+  const TypeToggle = ({ value, onChange, opts }) => (
+    <div className="grid gap-1 bg-[#131A2C] border border-[#242E48] rounded-xl p-1"
+      style={{ gridTemplateColumns: `repeat(${opts.length}, 1fr)` }}>
       {opts.map(o => (
         <button key={o.v} onClick={() => onChange(o.v)}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all
-            ${value === o.v ? 'bg-[#FFFCF4] text-[#201A14] shadow-sm' : 'text-[#7A6B5B] hover:text-[#4F463B]'}`}>
+          className="py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2"
+          style={value === o.v ? {
+            background: '#202A44',
+            color: '#F3F5FC',
+            boxShadow: '0 2px 8px -2px rgba(0,0,0,0.5)',
+          } : {
+            color: '#5C6688',
+          }}>
           {o.l}
         </button>
       ))}
     </div>
   );
 
-  const inputClass = "w-full bg-[#FFFCF4] border border-[#C5B49A] rounded-xl px-4 py-2.5 text-[#201A14] font-mono placeholder-[#C5B49A] focus:border-[#0284C7] transition-colors";
-  const labelClass = "block text-xs uppercase tracking-widest text-[#7A6B5B] mb-1.5";
-
   return (
-    <div className="pb-24 px-4 pt-0 max-w-lg mx-auto">
-	  {/* Discipline tabs — RACL style */}
-	  <div className="flex bg-white border-b border-[#E6D8BF] -mx-4 mb-4">
-	    {DISCIPLINES.filter(d => d.key !== 'brick' && d.key !== 'gym').map(d => (
-		  <button
-		    key={d.key}
-		    onClick={() => setDiscipline(d.key)}
-		    className="flex-1 flex flex-col items-center pt-1.5 pb-1 gap-0.5 transition-all"
-		    style={{
-			  borderTop:    discipline === d.key ? `3px solid ${d.color}` : '3px solid transparent',
-			  borderLeft:   discipline === d.key ? '0.5px solid #E6D8BF'  : '0.5px solid transparent',
-			  borderRight:  discipline === d.key ? '0.5px solid #E6D8BF'  : '0.5px solid transparent',
-			  borderBottom: discipline === d.key ? '2px solid #FFFCF4'    : 'none',
-			  background:   discipline === d.key ? '#FFFCF4' : '#F5EFE3',
-			  marginBottom: discipline === d.key ? -1 : 0,
-		    }}>
-		    <span style={{ fontSize: 15, opacity: discipline === d.key ? 1 : 0.4 }}>{d.icon}</span>
-		    <span style={{
-			  fontSize: 14,
-			  fontWeight: discipline === d.key ? 600 : 400,
-			  color: discipline === d.key ? d.color : '#aaa',
-			  letterSpacing: 0.2,
-		    }}>
-			  {d.label}
-		    </span>
-		  </button>
-	    ))}
-	  </div>
+    <div className="min-h-screen" style={{ background: '#03050B' }}>
 
-      {/* Swim form */}
-      {discipline === 'swim' && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Date</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Distance (metres)</label>
-              <input type="number" value={swimDist} onChange={e => setSwimDist(e.target.value)}
-                placeholder="e.g. 1500" className={inputClass} />
-            </div>
-          </div>
-          <DurationInput label="Duration" value={swimDur} onChange={setSwimDur} />
-          <div>
-            <label className={labelClass}>Type</label>
-            <Toggle value={swimType} onChange={setSwimType}
-              opts={[{v:'pool',l:'🏊 Pool'},{v:'open',l:'🌊 Open Water'}]} />
-          </div>
-          <MetricsCard discipline="swim" distanceM={parseFloat(swimDist)||0} durationS={parseDuration(swimDur)} />
-        </div>
-      )}
+      {/* ── Sliding capsule tab selector ── */}
+      <div className="sticky top-0 z-20 px-4 pt-4 pb-3"
+        style={{ background: '#03050B', borderBottom: '1px solid #242E48' }}>
+        <div className="relative grid grid-cols-3 rounded-full p-1"
+          style={{ background: '#131A2C', border: '1px solid #242E48' }}>
 
-      {/* Bike form */}
-      {discipline === 'bike' && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Date</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Distance (km)</label>
-              <input type="number" step="0.1" value={bikeDist} onChange={e => setBikeDist(e.target.value)}
-                placeholder="e.g. 40" className={inputClass} />
-            </div>
-          </div>
-          <DurationInput label="Duration" value={bikeDur} onChange={setBikeDur} />
-          <div>
-            <label className={labelClass}>Type</label>
-            <Toggle value={bikeType} onChange={setBikeType}
-              opts={[{v:'outdoor',l:'🚴 Outdoor'},{v:'indoor',l:'🏠 Indoor'}]} />
-          </div>
-          <div>
-            <label className={labelClass}>Elevation (m) — optional</label>
-            <input type="number" value={bikeElev} onChange={e => setBikeElev(e.target.value)}
-              placeholder="e.g. 250" className={inputClass} />
-          </div>
-          <MetricsCard discipline="bike" distanceM={(parseFloat(bikeDist)||0)*1000} durationS={parseDuration(bikeDur)} />
-        </div>
-      )}
+          {/* Sliding highlight */}
+          <div
+            className="absolute top-1 bottom-1 rounded-full transition-all duration-300"
+            style={{
+              left: `calc(${activeIndex} * 33.333% + 4px)`,
+              width: 'calc(33.333% - 8px)',
+              background: `linear-gradient(120deg, ${accentDeep}, ${accentColor})`,
+              boxShadow: `0 4px 14px -4px ${accentColor}66`,
+            }}
+          />
 
-      {/* Run form */}
-      {discipline === 'run' && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>Date</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Distance (km)</label>
-              <input type="number" step="0.1" value={runDist} onChange={e => setRunDist(e.target.value)}
-                placeholder="e.g. 10" className={inputClass} />
-            </div>
-          </div>
-          <DurationInput label="Duration" value={runDur} onChange={setRunDur} />
-          <div>
-            <label className={labelClass}>Type</label>
-            <Toggle value={runType} onChange={setRunType}
-              opts={[{v:'outdoor',l:'🏃 Outdoor'},{v:'treadmill',l:'⚙️ Treadmill'}]} />
-          </div>
-          <MetricsCard discipline="run" distanceM={(parseFloat(runDist)||0)*1000} durationS={parseDuration(runDur)} />
-        </div>
-      )}
-
-      {/* How it felt */}
-      <div className="mt-3">
-        <label className={labelClass}>How did it feel?</label>
-        <div className="flex gap-2">
-          {FEEL_EMOJI.map((emoji, i) => (
-            <button key={i} onClick={() => setFeel(i + 1)}
-              className={`flex-1 py-2 rounded-xl text-xl transition-all border
-                ${feel === i+1
-                  ? 'border-[#0284C7] bg-[#0284C7]/10'
-                  : 'border-[#E6D8BF] bg-[#FFFCF4] opacity-60 hover:opacity-90'}`}>
-              {emoji}
+          {DISCIPLINES.map((d, i) => (
+            <button
+              key={d.key}
+              onClick={() => setDiscipline(d.key)}
+              className="relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-full transition-all"
+              style={{
+                color: discipline === d.key ? '#fff' : '#5C6688',
+                fontWeight: discipline === d.key ? 700 : 500,
+                fontSize: 13,
+              }}
+            >
+              <span style={{
+                fontSize: 15,
+                filter: discipline === d.key ? 'none' : 'grayscale(1) opacity(0.4)',
+                transition: 'filter 0.3s',
+              }}>
+                {d.icon}
+              </span>
+              {d.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Notes */}
-      <div className="mt-3">
-        <label className={labelClass}>Notes (optional)</label>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)}
-          placeholder="How was the session? Any issues?"
-          rows={2}
-          className="w-full bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl px-4 py-3 text-[#201A14] placeholder-[#B8AA96] focus:border-[#0284C7] transition-colors resize-none text-sm" />
+      {/* ── Scrollable form ── */}
+      <div className="px-4 pt-4 pb-36 max-w-lg mx-auto space-y-4">
+
+        {/* Date + Distance row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={lbl}>Date</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className={inp} style={{ colorScheme: 'dark' }} />
+          </div>
+          <div>
+            <label className={lbl}>
+              {discipline === 'swim' ? 'Distance (m)' : 'Distance (km)'}
+            </label>
+            <input type="number"
+              value={discipline === 'swim' ? swimDist : discipline === 'bike' ? bikeDist : runDist}
+              onChange={e => {
+                if (discipline === 'swim') setSwimDist(e.target.value);
+                else if (discipline === 'bike') setBikeDist(e.target.value);
+                else setRunDist(e.target.value);
+              }}
+              placeholder={discipline === 'swim' ? 'e.g. 1500' : discipline === 'bike' ? 'e.g. 40' : 'e.g. 10'}
+              step={discipline === 'swim' ? '1' : '0.1'}
+              className={inp}
+            />
+          </div>
+        </div>
+
+        {/* Duration */}
+        <DurationInput
+          value={discipline === 'swim' ? swimDur : discipline === 'bike' ? bikeDur : runDur}
+          onChange={discipline === 'swim' ? setSwimDur : discipline === 'bike' ? setBikeDur : setRunDur}
+          accentColor={accentColor}
+        />
+
+        {/* Type toggle */}
+        <div>
+          <label className={lbl}>Type</label>
+          {discipline === 'swim' && (
+            <TypeToggle value={swimType} onChange={setSwimType}
+              opts={[{ v: 'pool', l: '🏊 Pool' }, { v: 'open', l: '🌊 Open Water' }]} />
+          )}
+          {discipline === 'bike' && (
+            <TypeToggle value={bikeType} onChange={setBikeType}
+              opts={[{ v: 'outdoor', l: '🚴 Outdoor' }, { v: 'indoor', l: '🏠 Indoor' }]} />
+          )}
+          {discipline === 'run' && (
+            <TypeToggle value={runType} onChange={setRunType}
+              opts={[{ v: 'outdoor', l: '🏃 Outdoor' }, { v: 'treadmill', l: '⚙️ Treadmill' }]} />
+          )}
+        </div>
+
+        {/* Elevation — bike only */}
+        {discipline === 'bike' && (
+          <div>
+            <label className={lbl}>Elevation (m) — Optional</label>
+            <input type="number" value={bikeElev} onChange={e => setBikeElev(e.target.value)}
+              placeholder="e.g. 250" className={inp} />
+          </div>
+        )}
+
+        {/* Live metrics card */}
+        <MetricsCard
+          discipline={discipline}
+          distanceM={getDistM()}
+          durationS={getDurS()}
+          accentColor={accentColor}
+        />
+
+        {/* How did it feel */}
+        <div>
+          <label className={lbl}>How did it feel?</label>
+          <div className="grid grid-cols-5 gap-2">
+            {FEEL_EMOJI.map((emoji, i) => (
+              <button key={i} onClick={() => setFeel(i + 1)}
+                className="rounded-xl text-2xl flex items-center justify-center transition-all"
+                style={{
+                  aspectRatio: '1',
+                  background: feel === i + 1 ? `color-mix(in srgb, ${accentColor} 12%, #131A2C)` : '#131A2C',
+                  border: feel === i + 1 ? `1.5px solid ${accentColor}` : '1.5px solid #242E48',
+                  boxShadow: feel === i + 1 ? `0 0 0 3px ${accentColor}22` : 'none',
+                  transform: feel === i + 1 ? 'scale(1.05)' : 'scale(1)',
+                }}>
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className={lbl}>Notes (optional)</label>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)}
+            placeholder="How was the session? Any issues?"
+            rows={2}
+            className="w-full bg-[#131A2C] border border-[#242E48] rounded-xl px-4 py-3 text-[#F3F5FC] placeholder-[#5C6688] outline-none transition-all resize-none text-sm"
+          />
+        </div>
+
       </div>
 
-      {/* Save button */}
-      <button onClick={handleSave}
-        disabled={!canSave() || saving}
-        className="w-full mt-3 py-3 rounded-2xl font-bold text-white transition-all text-base disabled:opacity-40 disabled:cursor-not-allowed"
-        style={{ backgroundColor: saved ? '#16A34A' : canSave() ? activeColor : '#D7C4A5' }}>
-        {saved ? '✅ Saved!' : saving ? 'Saving…' : 'Save Session'}
-      </button>
+      {/* ── Fixed save button ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-3 max-w-lg mx-auto"
+        style={{ background: 'linear-gradient(to top, #03050B 60%, transparent)' }}>
+        <button
+          onClick={handleSave}
+          disabled={!canSave() || saving}
+          className="w-full py-4 rounded-full font-bold text-base tracking-wide transition-all"
+          style={{
+            background: saved
+              ? 'linear-gradient(120deg, #1a8a62, #33E1A3)'
+              : canSave()
+              ? `linear-gradient(120deg, ${accentDeep}, ${accentColor})`
+              : '#1A2338',
+            color: canSave() || saved ? (discipline === 'bike' && !saved ? '#1a0e00' : '#fff') : '#5C6688',
+            opacity: (!canSave() && !saved) ? 0.5 : 1,
+            boxShadow: canSave() && !saving ? `0 8px 24px -8px ${accentColor}66` : 'none',
+          }}
+        >
+          {saved ? '✅ Saved!' : saving ? 'Saving…' : 'Save Session'}
+        </button>
+      </div>
+
     </div>
   );
 }
