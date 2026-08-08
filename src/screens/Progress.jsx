@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../utils/api';
-import { Gauge, Pencil, Ruler } from 'lucide-react';
+import { Bike as BikeIcon, Footprints, Gauge, Pencil, Ruler, Trophy, Waves } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, RadarChart, PolarGrid,
@@ -12,10 +12,10 @@ import { BarChart3, LineChart as LineIcon } from 'lucide-react';
 import { Sparkles, ChevronDown, Trash2 } from 'lucide-react';
 
 const TABS = [
-  { key: 'combined', label: 'Total', color: '#7C3AED', icon: '🏁' },
-  { key: 'swim',     label: 'Swim',     color: '#0284C7', icon: '🏊' },
-  { key: 'bike',     label: 'Bike',     color: '#EA580C', icon: '🚴' },
-  { key: 'run',      label: 'Run',      color: '#16A34A', icon: '🏃' },
+  { key: 'combined', label: 'Total', color: '#8B7CFF', icon: Trophy },
+  { key: 'swim',     label: 'Swim',     color: '#22C3FF', icon: Waves },
+  { key: 'bike',     label: 'Bike',     color: '#FFB020', icon: BikeIcon },
+  { key: 'run',      label: 'Run',      color: '#FF3D71', icon: Footprints },
 ];
 
 const PACE_MODES = [
@@ -23,11 +23,20 @@ const PACE_MODES = [
   { key: 'extrapolated', label: 'Extrapolated' },
 ];
 
+const VISUALS = {
+  combined: { color: '#8B7CFF', gradient: 'linear-gradient(135deg, #8B7CFF 0%, #B4A8FF 100%)', icon: Trophy },
+  swim: { color: '#22C3FF', gradient: 'linear-gradient(135deg, #22C3FF 0%, #38E7FF 100%)', icon: Waves },
+  bike: { color: '#FFB020', gradient: 'linear-gradient(135deg, #FFB020 0%, #FFD166 100%)', icon: BikeIcon },
+  run: { color: '#FF3D71', gradient: 'linear-gradient(135deg, #FF3D71 0%, #FF7A9C 100%)', icon: Footprints },
+};
+
+const TAB_INDEX = { combined: 0, swim: 1, bike: 2, run: 3 };
+
 function CustomTooltip({ active, payload, label, formatValue }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#FFFCF4] border border-[#E6D8BF] rounded-xl px-3 py-2 text-xs shadow-sm">
-      <p className="text-[#7A6B5B] mb-1">{label}</p>
+    <div className="bg-[#1A2338] border border-[#242E48] rounded-xl px-3 py-2 text-xs shadow-xl">
+      <p className="text-[#9BA6C4] mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-mono font-semibold">
           {formatValue ? formatValue(p.value) : p.value}
@@ -39,10 +48,10 @@ function CustomTooltip({ active, payload, label, formatValue }) {
 
 function StatCard({ label, value, sub, color }) {
   return (
-    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-xl p-3">
-      <p className="text-[10px] text-[#7A6B5B] uppercase tracking-wider">{label}</p>
-      <p className="text-xl font-bold font-mono mt-1" style={{ color }}>{value}</p>
-      {sub && <p className="text-xs text-[#7A6B5B] mt-0.5">{sub}</p>}
+    <div className="bg-[#131A2C] border border-[#242E48] shadow-[0_12px_30px_rgba(0,0,0,0.22)] rounded-xl p-3">
+      <p className="text-[10px] text-[#9BA6C4] uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-bold font-mono mt-1 leading-none" style={{ color }}>{value}</p>
+      {sub && <p className="text-xs text-[#5C6688] mt-1.5">{sub}</p>}
     </div>
   );
 }
@@ -83,44 +92,44 @@ function EditSessionModal({ session, onClose, onSaved }) {
   };
   
   return (
-    <div className="fixed inset-0 z-50 bg-[#201A14]/50" onClick={onClose}>
-      <div className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#FFFCF4] rounded-t-3xl p-6 pb-8 border-t border-[#E6D8BF] shadow-2xl"
+    <div className="fixed inset-0 z-50 bg-[#03050B]/75" onClick={onClose}>
+      <div className="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#131A2C] rounded-t-3xl p-6 pb-8 border-t border-[#242E48] shadow-2xl"
            onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-[#D7C4A5] rounded-full mx-auto mb-5" />
-        <h3 className="font-bold text-[#201A14] text-lg mb-4">Edit Session</h3>
+        <div className="w-10 h-1 bg-[#242E48] rounded-full mx-auto mb-5" />
+        <h3 className="font-bold text-[#F3F5FC] text-lg mb-4">Edit Session</h3>
 
-        <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">Discipline</label>
+        <label className="block text-xs uppercase tracking-widest text-[#9BA6C4] mb-2">Discipline</label>
         <div className="grid grid-cols-3 gap-2 mb-3">
           {DISCIPLINES.map(d => (
             <button key={d} onClick={() => setType(d)}
               className={`py-2 rounded-xl border text-sm font-medium flex items-center justify-center gap-1.5
-                ${type === d ? 'border-[#0284C7] bg-[#0284C7]/10 text-[#0284C7]' : 'border-[#E6D8BF] text-[#7A6B5B]'}`}>
+                ${type === d ? 'border-[#22C3FF] bg-[#22C3FF]/10 text-[#22C3FF]' : 'border-[#242E48] text-[#9BA6C4]'}`}>
               {DISCIPLINE_ICON[d]} <span className="capitalize">{d}</span>
             </button>
           ))}
         </div>
 
-        <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">
+        <label className="block text-xs uppercase tracking-widest text-[#9BA6C4] mb-2">
           Distance ({type === 'swim' ? 'm' : 'km'})
         </label>
         <input type="number" value={distance} onChange={e => setDistance(e.target.value)}
-          className="w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] font-mono mb-4" />
+          className="w-full bg-[#090D18] border border-[#242E48] rounded-xl px-4 py-3 text-[#F3F5FC] font-mono mb-4" />
 
-        <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">Duration (hh:mm:ss)</label>
+        <label className="block text-xs uppercase tracking-widest text-[#9BA6C4] mb-2">Duration (hh:mm:ss)</label>
         <input type="text" value={duration} onChange={e => setDuration(e.target.value)}
           placeholder="0:45:30"
-          className="w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] font-mono mb-4" />
+          className="w-full bg-[#090D18] border border-[#242E48] rounded-xl px-4 py-3 text-[#F3F5FC] font-mono mb-4" />
 
-        <label className="block text-xs uppercase tracking-widest text-[#7A6B5B] mb-2">Date</label>
+        <label className="block text-xs uppercase tracking-widest text-[#9BA6C4] mb-2">Date</label>
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
-          className="w-full bg-[#FFF8EA] border border-[#E6D8BF] rounded-xl px-4 py-3 text-[#201A14] font-mono mb-5" />
+          className="w-full bg-[#090D18] border border-[#242E48] rounded-xl px-4 py-3 text-[#F3F5FC] font-mono mb-5" />
 
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#EFE2CB] text-[#201A14] text-sm font-medium">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#1A2338] text-[#F3F5FC] text-sm font-medium">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving}
-            className="flex-1 py-3 rounded-xl bg-[#0284C7] text-white text-sm font-semibold disabled:opacity-50">
+            className="flex-1 py-3 rounded-xl bg-[#22C3FF] text-[#03050B] text-sm font-semibold disabled:opacity-50">
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
@@ -358,7 +367,7 @@ export default function Progress() {
   }, [activities, tab, combinedFilter]);
 
   const config = RACE_CONFIG[tab] || {};
-  const color = activeTab.color;
+  const color = VISUALS[tab]?.color || activeTab.color;
 
   // Stats
   const totalDist = sessions.reduce((s, a) => s + (tab === 'swim' ? a.distance_m : a.distance_m/1000), 0);
@@ -457,31 +466,28 @@ export default function Progress() {
   const shouldReverse = metric === 'pace' && (paceMode === 'extrapolated' || tab !== 'bike');
 
   return (
-    <div className="pb-24 px-4 pt-0 max-w-lg mx-auto">
+    <div className="min-h-screen bg-[#03050B] pb-24 px-4 pt-3 max-w-lg mx-auto text-[#F3F5FC]">
  
       {/* Discipline tabs */}
 	  {/* Discipline tabs — RACL style top nav */}
-	  <div className="flex mb-4 bg-white border-b border-[#E6D8BF] -mx-4 px-0">
+	  <div className="relative grid grid-cols-4 mb-4 rounded-full bg-[#090D18] border border-[#242E48] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)] overflow-hidden">
+        <div
+          className="absolute top-1 bottom-1 left-1 w-[calc(25%-0.5rem)] rounded-full shadow-[0_0_22px_rgba(139,124,255,0.24)] transition-transform duration-300 ease-out"
+          style={{
+            transform: `translateX(${TAB_INDEX[tab] * 100}%)`,
+            background: VISUALS[tab]?.gradient,
+          }}
+        />
 	    {TABS.map(t => (
 		  <button
 		    key={t.key}
 		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); setBikeFilter('outdoor'); setSwimFilter('pool'); }}
-		    className="flex-1 flex flex-col items-center pt-1.5 pb-1 gap-0.5 transition-all"
-		    style={{
-			  borderTop:    tab === t.key ? `3px solid ${t.color}` : '3px solid transparent',
-			  borderLeft:   tab === t.key ? '0.5px solid #E6D8BF'  : '0.5px solid transparent',
-			  borderRight:  tab === t.key ? '0.5px solid #E6D8BF'  : '0.5px solid transparent',
-			  borderBottom: tab === t.key ? '2px solid #FFFCF4'    : 'none',
-			  background:   tab === t.key ? '#FFFCF4' : '#F5EFE3',
-			  marginBottom: tab === t.key ? -1 : 0,
-		    }}>
-		    <span style={{ fontSize: 15, opacity: tab === t.key ? 1 : 0.4 }}>{t.icon}</span>
-		    <span style={{
-			  fontSize: 14,
-			  fontWeight: tab === t.key ? 600 : 400,
-			  color: tab === t.key ? t.color : '#aaa',
-			  letterSpacing: 0.2,
-		    }}>
+		    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-xs font-semibold transition-colors ${tab === t.key ? 'text-[#03050B]' : 'text-[#9BA6C4]'}`}>
+            {(() => {
+              const Icon = VISUALS[t.key]?.icon;
+              return Icon ? <Icon size={15} strokeWidth={2.4} /> : null;
+            })()}
+		    <span>
 			  {t.label}
 		    </span>
 		  </button>
@@ -489,64 +495,64 @@ export default function Progress() {
 	  </div>
 	  
 	  {tab === 'bike' && (
-	    <div className="flex gap-1 mb-2">
+	    <div className="flex gap-1.5 mb-3 rounded-full bg-[#090D18] border border-[#242E48] p-1">
 		  <button onClick={() => setBikeFilter('outdoor')}
-		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+		    className={`flex-1 py-1.5 rounded-full border text-[11px] font-semibold transition-all
 			  ${bikeFilter === 'outdoor' || bikeFilter === 'all'
-			    ? 'bg-[#EA580C] text-white border-[#EA580C]'
-			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
+			    ? 'bg-[#FFB020]/15 text-[#FFB020] border-[#FFB020] shadow-[0_0_18px_rgba(255,176,32,0.18)]'
+			    : 'border-transparent text-[#9BA6C4] bg-transparent'}`}>
 		    ☀️ Outdoor
 		  </button>
 		  <button onClick={() => setBikeFilter('indoor')}
-		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+		    className={`flex-1 py-1.5 rounded-full border text-[11px] font-semibold transition-all
 			  ${bikeFilter === 'indoor'
-			    ? 'bg-[#EA580C] text-white border-[#EA580C]'
-			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
+			    ? 'bg-[#FFB020]/15 text-[#FFB020] border-[#FFB020] shadow-[0_0_18px_rgba(255,176,32,0.18)]'
+			    : 'border-transparent text-[#9BA6C4] bg-transparent'}`}>
 		    🏠 Indoor
 		  </button>
 	    </div>
 	  )}	  
 	  
 	  {tab === 'swim' && (
-	    <div className="flex gap-1 mb-2">
+	    <div className="flex gap-1.5 mb-3 rounded-full bg-[#090D18] border border-[#242E48] p-1">
 		  <button onClick={() => setSwimFilter('pool')}
-		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+		    className={`flex-1 py-1.5 rounded-full border text-[11px] font-semibold transition-all
 			  ${swimFilter === 'pool'
-			    ? 'border-[#0284C7] text-white'
-			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
-		    style={swimFilter === 'pool' ? { backgroundColor: '#0284C7' } : {}}>
+			    ? 'border-[#22C3FF] text-[#22C3FF] bg-[#22C3FF]/15 shadow-[0_0_18px_rgba(34,195,255,0.18)]'
+			    : 'border-transparent text-[#9BA6C4] bg-transparent'}`}
+		    style={{}}>
 		    🏊 Pool
 		  </button>
 		  <button onClick={() => setSwimFilter('open')}
-		    className={`flex-1 py-1.5 rounded-lg border text-[11px] font-medium transition-colors
+		    className={`flex-1 py-1.5 rounded-full border text-[11px] font-semibold transition-all
 			  ${swimFilter === 'open'
-			    ? 'border-[#0284C7] text-white'
-			    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
-		    style={swimFilter === 'open' ? { backgroundColor: '#0284C7' } : {}}>
+			    ? 'border-[#22C3FF] text-[#22C3FF] bg-[#22C3FF]/15 shadow-[0_0_18px_rgba(34,195,255,0.18)]'
+			    : 'border-transparent text-[#9BA6C4] bg-transparent'}`}
+		    style={{}}>
 		    🌊 Open Water
 		  </button>
 	    </div>
 	  )}	  
 	  
 	  {cumulativeSummaries[tab] && (
-	    <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
+	    <div className="bg-[#1A2338] border border-[#242E48] shadow-[0_10px_28px_rgba(0,0,0,0.22)] rounded-full px-4 py-3 mb-3">
 		  <button
 		    onClick={() => setDisciplineExpanded(!disciplineExpanded)}
 		    className="w-full flex items-center justify-between"
 		  >
 		    <div className="flex items-center gap-1.5">
-			  <Sparkles size={12} className="text-[#0284C7]" />
-			  <p className="text-[10px] uppercase tracking-wider text-[#0284C7]">
-			    {TABS.find(t => t.key === tab)?.label} Progress Summary
+			  <Sparkles size={13} style={{ color }} />
+			  <p className="text-[10px] uppercase tracking-wider text-[#9BA6C4] font-semibold">
+			    AI Insight
 			  </p>
 		    </div>
 		    <ChevronDown
 			  size={13}
-			  className={`text-[#0284C7] transition-transform ${disciplineExpanded ? 'rotate-180' : ''}`}
+			  className={`text-[#9BA6C4] transition-transform ${disciplineExpanded ? 'rotate-180' : ''}`}
 		    />
 		  </button>
 		  {disciplineExpanded && (
-		    <p className="text-xs text-[#5C4F3F] leading-relaxed mt-2">
+		    <p className="text-xs text-[#9BA6C4] leading-relaxed mt-3">
 			  {cumulativeSummaries[tab]}
 		    </p>
 		  )}
@@ -557,41 +563,41 @@ export default function Progress() {
 	  {tab === 'combined' && (
 	    <div>
 		  {cumulativeSummaries.overall && (
-			<div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
+			<div className="bg-[#1A2338] border border-[#242E48] shadow-[0_10px_28px_rgba(0,0,0,0.22)] rounded-full px-4 py-3 mb-3">
 			  <button
 				onClick={() => setOverallExpanded(!overallExpanded)}
 				className="w-full flex items-center justify-between"
 			  >
 				<div className="flex items-center gap-1.5">
-				  <Sparkles size={13} className="text-[#0284C7]" />
-				  <p className="text-[10px] uppercase tracking-wider text-[#0284C7] font-semibold">
-					Overall Race Readiness
+				  <Sparkles size={13} className="text-[#8B7CFF]" />
+				  <p className="text-[10px] uppercase tracking-wider text-[#9BA6C4] font-semibold">
+					AI Insight
 				  </p>
 				</div>
 				<ChevronDown
 				  size={14}
-				  className={`text-[#0284C7] transition-transform ${overallExpanded ? 'rotate-180' : ''}`}
+				  className={`text-[#9BA6C4] transition-transform ${overallExpanded ? 'rotate-180' : ''}`}
 				/>
 			  </button>
 			  {overallExpanded && (
-				<p className="text-sm text-[#3D332A] leading-relaxed mt-3">
+				<p className="text-sm text-[#9BA6C4] leading-relaxed mt-3">
 				  {cumulativeSummaries.overall}
 				</p>
 			  )}
 			</div>
 		  )}  
 		  {/* Filter toggle */}
-		  <div className="flex gap-2 mb-2">
+		  <div className="flex gap-2 mb-3">
 		    {[
 			  { key: 'last3',   label: 'Last 3' },
 			  { key: 'top3',    label: 'Top 3' },
 			  { key: 'average', label: 'Average' },
 		    ].map(opt => (
 			  <button key={opt.key} onClick={() => setCombinedFilter(opt.key)}
-			    className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-colors
+			    className={`flex-1 py-2 rounded-full border text-xs font-semibold transition-all
 				  ${combinedFilter === opt.key
-				    ? 'bg-[#7C3AED] text-white border-[#7C3AED]'
-				    : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}>
+				    ? 'bg-[#8B7CFF]/15 text-[#8B7CFF] border-[#8B7CFF] shadow-[0_0_18px_rgba(139,124,255,0.18)]'
+				    : 'border-[#242E48] text-[#9BA6C4] bg-[#090D18]'}`}>
 			    {opt.label}
 			  </button>
 		    ))}
@@ -600,22 +606,22 @@ export default function Progress() {
 		  {combinedStats ? (
 		    <>
 			  {/* Total time card */}
-			  <div className="bg-[#FFFCF4] border border-[#E6D8BF] rounded-2xl p-4 mb-4">
-			    <p className="text-[10px] uppercase tracking-widest text-[#7A6B5B] mb-2">
+			  <div className="bg-[#131A2C] border border-[#242E48] rounded-2xl p-4 mb-4 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+			    <p className="text-[10px] uppercase tracking-widest text-[#9BA6C4] mb-2">
 				  Projected Total Race Time
 			    </p>
 			    <div className="flex items-center gap-4">
 				  {/* Left — Target + Ideal stacked */}
 				  <div className="flex flex-col gap-1.5">
 				    <div>
-					  <p className="text-[9px] uppercase tracking-wider text-[#7A6B5B]">Target</p>
-					  <p className="text-sm font-bold font-mono text-[#DC2626]">
+					  <p className="text-[9px] uppercase tracking-wider text-[#5C6688]">Target</p>
+					  <p className="text-sm font-bold font-mono text-[#FF5C72]">
 					    {formatDuration(combinedStats.totalTarget_s)}
 					  </p>
 				    </div>
 				    <div>
-					  <p className="text-[9px] uppercase tracking-wider text-[#7A6B5B]">Ideal</p>
-					  <p className="text-sm font-bold font-mono text-[#16A34A]">
+					  <p className="text-[9px] uppercase tracking-wider text-[#5C6688]">Ideal</p>
+					  <p className="text-sm font-bold font-mono text-[#33E1A3]">
 					    {formatDuration(combinedStats.totalBest_s)}
 					  </p>
 				    </div>
@@ -623,8 +629,8 @@ export default function Progress() {
 
 				  {/* Right — Actual projected time, large */}
 				  <div className="flex-1 text-right">
-				    <p className="text-[9px] uppercase tracking-wider text-[#7A6B5B]">Projected</p>
-				    <p className="text-4xl font-black font-mono text-[#7C3AED] leading-none mt-0.5">
+				    <p className="text-[9px] uppercase tracking-wider text-[#5C6688]">Projected</p>
+				    <p className="text-4xl font-black font-mono text-[#8B7CFF] leading-none mt-0.5">
 					  {combinedStats.totalExtrap_s
 					    ? formatDuration(combinedStats.totalExtrap_s)
 					    : '--:--:--'}
@@ -637,13 +643,13 @@ export default function Progress() {
 				  const vsTarget = combinedStats.totalExtrap_s - combinedStats.totalTarget_s;
 				  const vsIdeal  = combinedStats.totalExtrap_s - combinedStats.totalBest_s;
 				  return (
-				    <div className="mt-3 space-y-1 pt-3 border-t border-[#E6D8BF]">
-					  <p className={`text-xs font-semibold ${vsTarget <= 0 ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+				    <div className="mt-3 space-y-1 pt-3 border-t border-[#242E48]">
+					  <p className={`text-xs font-semibold ${vsTarget <= 0 ? 'text-[#33E1A3]' : 'text-[#FF5C72]'}`}>
 					    {vsTarget <= 0
 						  ? `✅ On track for target · ${formatDuration(Math.abs(vsTarget))} ahead`
 						  : `⚠️ Behind target · ${formatDuration(Math.abs(vsTarget))} to close`}
 					  </p>
-					  <p className={`text-xs font-semibold ${vsIdeal <= 0 ? 'text-[#16A34A]' : 'text-[#7A6B5B]'}`}>
+					  <p className={`text-xs font-semibold ${vsIdeal <= 0 ? 'text-[#33E1A3]' : 'text-[#9BA6C4]'}`}>
 					    {vsIdeal <= 0
 						  ? `✅ On track for ideal · ${formatDuration(Math.abs(vsIdeal))} ahead`
 						  : `🎯 ${formatDuration(Math.abs(vsIdeal))} away from ideal`}
@@ -654,19 +660,19 @@ export default function Progress() {
 			  </div>
 
 			{/* Overview + Breakdown */}
-			<div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
+			<div className="bg-[#131A2C] border border-[#242E48] shadow-[0_12px_30px_rgba(0,0,0,0.22)] rounded-2xl p-3 mb-3">
 			  {/* Header with Target/Ideal toggle */}
 			  <div className="flex items-center justify-between mb-2">
-				<p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Overview</p>
+				<p className="text-xs uppercase tracking-widest text-[#9BA6C4]">Overview</p>
 				<div className="flex gap-1">
 				  <button onClick={() => setRadarMode('target')}
 				    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-					  ${radarMode === 'target' ? 'bg-[#7C3AED] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
+					  ${radarMode === 'target' ? 'bg-[#8B7CFF] text-[#03050B]' : 'bg-[#090D18] text-[#9BA6C4]'}`}>
 				    Target
 				  </button>
 				  <button onClick={() => setRadarMode('ideal')}
 				    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-colors
-					  ${radarMode === 'ideal' ? 'bg-[#7C3AED] text-white' : 'bg-[#EFE2CB] text-[#7A6B5B]'}`}>
+					  ${radarMode === 'ideal' ? 'bg-[#8B7CFF] text-[#03050B]' : 'bg-[#090D18] text-[#9BA6C4]'}`}>
 				    Ideal
 				  </button>
 				</div>
@@ -674,9 +680,9 @@ export default function Progress() {
 
 			  {/* Breakdown with progress bars — full width, no side-by-side */}
 			  {[
-				{ key: 'swim', label: 'Swim', icon: '🏊', color: '#0284C7', data: combinedStats.swim },
-				{ key: 'bike', label: 'Bike', icon: '🚴', color: '#EA580C', data: combinedStats.bike },
-				{ key: 'run',  label: 'Run',  icon: '🏃', color: '#16A34A', data: combinedStats.run },
+				{ key: 'swim', label: 'Swim', icon: '🏊', color: '#22C3FF', data: combinedStats.swim },
+				{ key: 'bike', label: 'Bike', icon: '🚴', color: '#FFB020', data: combinedStats.bike },
+				{ key: 'run',  label: 'Run',  icon: '🏃', color: '#FF3D71', data: combinedStats.run },
 			  ].map(({ key, label, icon, color: dColor, data }) => {
 				const benchmarkS     = data ? (radarMode === 'ideal' ? data.bestS : data.targetS) : null;
 				const pct            = data && benchmarkS ? Math.min(100, Math.round((benchmarkS / data.avgExtrap_s) * 100)) : 0;
@@ -688,7 +694,7 @@ export default function Progress() {
                       <div className="flex items-start gap-3">
                         {/* Left — discipline pill */}
                         <div className="flex flex-col items-center justify-center rounded-xl px-2 py-2 flex-shrink-0"
-                          style={{ backgroundColor: `${dColor}18`, border: '1px solid #7C3AED40', minWidth: '60px' }}>
+                          style={{ backgroundColor: `${dColor}18`, border: '1px solid #242E48', minWidth: '60px' }}>
                           <span className="text-base leading-none">{icon}</span>
                           <p className="text-[11px] font-semibold mt-0.5" style={{ color: dColor }}>{label}</p>
                         </div>
@@ -699,30 +705,30 @@ export default function Progress() {
                             <>
                               {/* Time + % on same line */}
                               <div className="flex items-center justify-between mb-1">
-                                <p className="text-xs font-mono font-bold text-[#5C3D1E]">
+                                <p className="text-xs font-mono font-bold text-[#F3F5FC]">
                                   {formatDuration(data.avgExtrap_s)}
                                 </p>
-                                <p className={`text-[11px] font-semibold ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                                <p className={`text-[11px] font-semibold ${isOnTrack ? 'text-[#33E1A3]' : 'text-[#FF5C72]'}`}>
                                   {pct}%
                                 </p>
                               </div>
 
                               {/* Benchmark*/}
-                              <p className={`text-[10px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                              <p className={`text-[10px] mt-0.5 mb-1 ${isOnTrack ? 'text-[#33E1A3]' : 'text-[#FF5C72]'}`}>
                                 {isOnTrack ? '✅' : '⚠️'} {benchmarkLabel} {formatDuration(benchmarkS)}
                               </p>
 							  
                               {/* Slider */}
-                              <div className="relative h-0.5 rounded-full bg-[#DDD6FE] overflow-hidden">
+                              <div className="relative h-0.5 rounded-full bg-[#090D18] overflow-hidden">
                                 <div className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-                                  style={{ width: `${pct}%`, backgroundColor: '#7C3AED' }} />
+                                  style={{ width: `${pct}%`, backgroundColor: '#8B7CFF' }} />
                                 <div className="absolute right-0 top-0 h-full w-0.5"
-                                  style={{ backgroundColor: isOnTrack ? '#16A34A' : '#DC2626' }} />
+                                  style={{ backgroundColor: isOnTrack ? '#33E1A3' : '#FF5C72' }} />
                               </div>
 
                             </>
                           ) : (
-                            <p className="text-[10px] text-[#7A6B5B] pt-1">No data</p>
+                            <p className="text-[10px] text-[#9BA6C4] pt-1">No data</p>
                           )}
                         </div>
                       </div>
@@ -738,8 +744,8 @@ export default function Progress() {
 		  ) : (
 		    <div className="text-center py-20">
 			  <p className="text-4xl mb-4">🏁</p>
-			  <p className="text-[#7A6B5B] text-sm">Log sessions in all three disciplines</p>
-			  <p className="text-[#9A8A76] text-xs mt-1">to see your combined race projection.</p>
+			  <p className="text-[#9BA6C4] text-sm">Log sessions in all three disciplines</p>
+			  <p className="text-[#5C6688] text-xs mt-1">to see your combined race projection.</p>
 		    </div>
 		  )}
 	    </div>
@@ -747,9 +753,12 @@ export default function Progress() {
 
       {tab !== 'combined' && (sessions.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-4xl mb-4">{activeTab.icon}</p>
-          <p className="text-[#7A6B5B] text-sm">No {tab} sessions logged yet.</p>
-          <p className="text-[#9A8A76] text-xs mt-1">Log your first session to see charts.</p>
+          {(() => {
+            const Icon = VISUALS[tab]?.icon;
+            return Icon ? <Icon size={42} className="mx-auto mb-4" style={{ color }} /> : null;
+          })()}
+          <p className="text-[#9BA6C4] text-sm">No {tab} sessions logged yet.</p>
+          <p className="text-[#5C6688] text-xs mt-1">Log your first session to see charts.</p>
         </div>
       ) : (
         <>
@@ -762,41 +771,49 @@ export default function Progress() {
             <StatCard label={tab === 'bike' ? 'Best Speed' : 'Best Pace'}
               value={formatPaceDisplay(best)}
               sub={lastOnTrack === true ? '✅ On track' : lastOnTrack === false ? '⚠️ Behind' : ''}
-              color={lastOnTrack === true ? '#16A34A' : lastOnTrack === false ? '#F87171' : color} />
+              color={lastOnTrack === true ? '#33E1A3' : lastOnTrack === false ? '#FF5C72' : color} />
           </div>
 
           {/* Metric selector */}
-          <div className="mb-3 rounded-2xl border border-[#E6D8BF] bg-[#FFFCF4] p-2 shadow-sm">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="mb-3 rounded-2xl border border-[#242E48] bg-[#131A2C] p-2 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+            <div className="relative grid grid-cols-2 rounded-full bg-[#090D18] border border-[#242E48] p-1 overflow-hidden">
+              <div
+                className="absolute top-1 bottom-1 left-1 w-[calc(50%-0.5rem)] rounded-full transition-transform duration-300 ease-out"
+                style={{
+                  transform: `translateX(${metric === 'pace' ? 0 : 100}%)`,
+                  background: VISUALS[tab]?.gradient,
+                }}
+              />
               <button onClick={() => setMetric('pace')}
-                className={`min-h-10 rounded-xl px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
+                className={`relative z-10 min-h-10 rounded-full px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
                   ${metric === 'pace'
-                    ? 'bg-[#0284C7] text-white shadow-sm'
-                    : 'text-[#7A6B5B] hover:bg-[#FFF8EA] hover:text-[#201A14]'}`}>
+                    ? 'text-[#03050B]'
+                    : 'text-[#9BA6C4] hover:text-[#F3F5FC]'}`}>
                 <Gauge size={16} />
                 <span>{paceWord}</span>
               </button>
               <button onClick={() => setMetric('distance')}
-                className={`min-h-10 rounded-xl px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
+                className={`relative z-10 min-h-10 rounded-full px-3 text-sm font-semibold transition-all flex items-center justify-center gap-2
                   ${metric === 'distance'
-                    ? 'bg-[#0284C7] text-white shadow-sm'
-                    : 'text-[#7A6B5B] hover:bg-[#FFF8EA] hover:text-[#201A14]'}`}>
+                    ? 'text-[#03050B]'
+                    : 'text-[#9BA6C4] hover:text-[#F3F5FC]'}`}>
                 <Ruler size={16} />
                 <span>Distance</span>
               </button>
             </div>
 
             {metric === 'pace' && (
-              <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-[#FFF8EA] border border-[#E6D8BF] px-2 py-1">
-                <span className="pl-2 text-[11px] font-semibold uppercase tracking-widest text-[#7A6B5B]">
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-full bg-[#090D18] border border-[#242E48] px-2 py-1">
+                <span className="pl-2 text-[11px] font-semibold uppercase tracking-widest text-[#5C6688]">
                 </span>
-                <div className="flex rounded-lg bg-[#EFE2CB] p-1">
+                <div className="flex rounded-full bg-[#131A2C] p-1">
                   {PACE_MODES.map(m => (
                     <button key={m.key} onClick={() => setPaceMode(m.key)}
-                      className={`px-3 py-0.7 rounded-md text-[11px] font-semibold transition-all
+                      className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all
                         ${paceMode === m.key
-                          ? 'bg-[#FFFCF4] text-[#201A14] shadow-sm'
-                          : 'text-[#7A6B5B] hover:text-[#201A14]'}`}>
+                          ? 'text-[#03050B] shadow-sm'
+                          : 'text-[#9BA6C4] hover:text-[#F3F5FC]'}`}
+                      style={paceMode === m.key ? { background: VISUALS[tab]?.gradient } : {}}>
                       {m.label}
                     </button>
                   ))}
@@ -804,12 +821,12 @@ export default function Progress() {
 				<div className="flex items-center gap-1 ml-auto">
 				  <button onClick={() => setChartType('bar')}
 					className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
-					  ${chartType === 'bar' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+					  ${chartType === 'bar' ? 'bg-[#242E48] text-[#F3F5FC]' : 'text-[#5C6688] hover:text-[#9BA6C4]'}`}>
 					<BarChart3 size={13} />
 				  </button>
 				  <button onClick={() => setChartType('line')}
 					className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
-					  ${chartType === 'line' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+					  ${chartType === 'line' ? 'bg-[#242E48] text-[#F3F5FC]' : 'text-[#5C6688] hover:text-[#9BA6C4]'}`}>
 					<LineIcon size={13} />
 				  </button>
 				</div>
@@ -817,18 +834,18 @@ export default function Progress() {
             )}
 
 			{metric === 'distance' && (
-              <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-[#FFF8EA] border border-[#E6D8BF] px-2 py-1">
-                <span className="pl-2 text-[11px] font-semibold uppercase tracking-widest text-[#7A6B5B]">
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-full bg-[#090D18] border border-[#242E48] px-2 py-1">
+                <span className="pl-2 text-[11px] font-semibold uppercase tracking-widest text-[#5C6688]">
                 </span>
 			    <div className="flex items-center justify-end gap-1 ml-auto">
 				  <button onClick={() => setChartType('bar')}
 				    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
-					  ${chartType === 'bar' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+					  ${chartType === 'bar' ? 'bg-[#242E48] text-[#F3F5FC]' : 'text-[#5C6688] hover:text-[#9BA6C4]'}`}>
 				    <BarChart3 size={13} />
 				  </button>
 				  <button onClick={() => setChartType('line')}
 				    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors
-					  ${chartType === 'line' ? 'bg-[#E6D8BF] text-[#201A14]' : 'text-[#C5B49A] hover:text-[#7A6B5B]'}`}>
+					  ${chartType === 'line' ? 'bg-[#242E48] text-[#F3F5FC]' : 'text-[#5C6688] hover:text-[#9BA6C4]'}`}>
 				    <LineIcon size={13} />
 				  </button>
 			    </div>
@@ -838,23 +855,23 @@ export default function Progress() {
           </div>
 
           {/* Main chart card */}
-          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3 mb-3">
+          <div className="bg-[#131A2C] border border-[#242E48] shadow-[0_12px_30px_rgba(0,0,0,0.22)] rounded-2xl p-3 mb-3">
 			<div className="flex items-center justify-between mb-4">
-			  <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">
+			  <p className="text-xs uppercase tracking-widest text-[#9BA6C4]">
 				{metric === 'distance' ? 'Distance' : `${paceWord} · ${paceMode === 'extrapolated' ? 'Extrapolated' : 'Actual'}`}
 				{metric === 'pace' && paceMode === 'extrapolated' && ` (${tab === 'swim' ? '1500m' : tab === 'bike' ? '40km' : '10km'})`}
 			  </p>
 			  {metric === 'pace' && (
 				<div className="flex items-center gap-3">
 				  <div className="flex items-center gap-1.5">
-					<div className="w-3 h-0.5 bg-[#F87171] opacity-70" />
-					<p className="text-[10px] text-[#7A6B5B]">
+					<div className="w-3 h-0.5 bg-[#FF5C72] opacity-70" />
+					<p className="text-[10px] text-[#9BA6C4]">
 					  Target {paceMode === 'extrapolated' ? formatDuration(targetExtrapValue * 60) : formatPaceDisplay(targetPaceValue * (tab === 'bike' ? 1 : 60))}
 					</p>
 				  </div>
 				  <div className="flex items-center gap-1.5">
-					<div className="w-3 h-0.5 bg-[#16A34A] opacity-70" />
-					<p className="text-[10px] text-[#7A6B5B]">
+					<div className="w-3 h-0.5 bg-[#33E1A3] opacity-70" />
+					<p className="text-[10px] text-[#9BA6C4]">
 					  Ideal {paceMode === 'extrapolated' ? formatDuration(bestExtrapValue * 60) : formatPaceDisplay(bestPaceValue * (tab === 'bike' ? 1 : 60))}
 					</p>
 				  </div>
@@ -866,46 +883,46 @@ export default function Progress() {
               {chartType === 'bar' ? (
                 <BarChart data={chartData} barSize={20}>
                   <CartesianGrid stroke="transparent" vertical={false} horizontal={false} />
-                  <XAxis dataKey="name" tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false}
+                  <XAxis dataKey="name" tick={{ fill: '#5C6688', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#5C6688', fontSize: 10 }} axisLine={false} tickLine={false}
                     domain={metric === 'distance' ? undefined : yDomain}
                     reversed={metric === 'distance' ? false : shouldReverse} 
 					tickFormatter={formatChartValue} />
                   <Tooltip content={<CustomTooltip formatValue={formatChartValue} />} />
                   {refLineValue !== null && metric === 'pace' && (
-					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="2 2" strokeOpacity={0.8} strokeWidth={1.5} />
+					<ReferenceLine y={refLineValue} stroke="#FF5C72" strokeDasharray="4 4" strokeOpacity={0.85} strokeWidth={1.5} />
 				  )}
 				  {bestLineValue !== null && metric === 'pace' && (
-				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="2 2" strokeOpacity={0.7} strokeWidth={1.5} />
+				    <ReferenceLine y={bestLineValue} stroke="#33E1A3" strokeDasharray="4 4" strokeOpacity={0.75} strokeWidth={1.5} />
 				  )}
-                  <Bar dataKey="value" fill={valueColor} radius={[4,4,0,0]} fillOpacity={0.85} />
+                  <Bar dataKey="value" fill={valueColor} radius={[5,5,0,0]} fillOpacity={0.9} />
                 </BarChart>
               ) : (
                 <LineChart data={chartData}>
                   <CartesianGrid stroke="transparent" vertical={false} horizontal={false} />
-                  <XAxis dataKey="name" tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#7A6B5B', fontSize: 10 }} axisLine={false} tickLine={false}
+                  <XAxis dataKey="name" tick={{ fill: '#5C6688', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#5C6688', fontSize: 10 }} axisLine={false} tickLine={false}
                     domain={metric === 'distance' ? undefined : yDomain}
                     reversed={metric === 'distance' ? false : shouldReverse} 
 					tickFormatter={formatChartValue} />
                   <Tooltip content={<CustomTooltip formatValue={formatChartValue} />} />
                   {refLineValue !== null && metric === 'pace' && (
-					<ReferenceLine y={refLineValue} stroke="#F87171" strokeDasharray="3 3" strokeOpacity={0.8} strokeWidth={1.5} />
+					<ReferenceLine y={refLineValue} stroke="#FF5C72" strokeDasharray="4 4" strokeOpacity={0.85} strokeWidth={1.5} />
 				  )}
 				  {bestLineValue !== null && metric === 'pace' && (
-				    <ReferenceLine y={bestLineValue} stroke="#16A34A" strokeDasharray="3 3" strokeOpacity={0.7} strokeWidth={1.5} />
+				    <ReferenceLine y={bestLineValue} stroke="#33E1A3" strokeDasharray="4 4" strokeOpacity={0.75} strokeWidth={1.5} />
 				  )}
                   <Line type="monotone" dataKey="value" stroke={valueColor}
-                    strokeWidth={2} dot={{ fill: valueColor, r: 2 }} activeDot={{ r: 4 }} />
+                    strokeWidth={2.5} dot={{ fill: valueColor, r: 2, stroke: '#03050B', strokeWidth: 1 }} activeDot={{ r: 4.5, stroke: '#03050B', strokeWidth: 2 }} />
                 </LineChart>
               )}
             </ResponsiveContainer>
           </div>
 
           {/* Session history */}
-          <div className="bg-[#FFFCF4] border border-[#E6D8BF] shadow-sm rounded-2xl p-3">
+          <div className="bg-[#131A2C] border border-[#242E48] shadow-[0_12px_30px_rgba(0,0,0,0.22)] rounded-2xl p-3">
             <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-              <p className="text-xs uppercase tracking-widest text-[#7A6B5B]">Session History</p>
+              <p className="text-xs uppercase tracking-widest text-[#9BA6C4]">Session History</p>
               <div className="flex gap-1.5">
                 {[
                   { key: 'all',   label: 'All' },
@@ -916,10 +933,16 @@ export default function Progress() {
                   <button
                     key={opt.key}
                     onClick={() => setSessionFilter(opt.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border
                       ${sessionFilter === opt.key
-                        ? 'bg-[#0284C7] text-white border-[#0284C7]'
-                        : 'border-[#E6D8BF] text-[#7A6B5B] bg-transparent'}`}
+                        ? 'border-current'
+                        : 'border-[#242E48] text-[#9BA6C4] bg-[#090D18]'}`}
+                    style={sessionFilter === opt.key ? {
+                      borderColor: color,
+                      backgroundColor: `${color}24`,
+                      boxShadow: `0 0 18px ${color}2E`,
+                      color,
+                    } : {}}
                   >
                     {opt.label}
                   </button>
@@ -938,22 +961,22 @@ export default function Progress() {
               ) / sessions.length;
               const avgDur = sessions.reduce((sum, x) => sum + (x.duration_s || 0), 0) / sessions.length;
               return (
-                <div className="bg-[#EFE2CB] rounded-xl p-3 mb-3">
+                <div className="bg-[#1A2338] border border-[#242E48] rounded-xl p-3 mb-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#7A6B5B] font-semibold">
+                      <p className="text-[10px] uppercase tracking-wider text-[#9BA6C4] font-semibold">
                         Average · {sessions.length} sessions
                       </p>
-                      <p className="text-xs text-[#5C4F3F] mt-0.5">
+                      <p className="text-xs text-[#5C6688] mt-0.5">
                         {avgDist.toFixed(1)} {distLabel} · {formatDuration(avgDur)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-mono font-semibold" style={{ color }}>
                         {formatPaceDisplay(avgPaceVal)}{' '}
-                        <span className="text-xs text-[#7A6B5B]">{paceLabel}</span>
+                        <span className="text-xs text-[#9BA6C4]">{paceLabel}</span>
                       </p>
-                      <p className="text-[10px] text-[#7A6B5B]">
+                      <p className="text-[10px] text-[#5C6688]">
                         avg {tab === 'bike' ? 'speed' : 'pace'}
                       </p>
                     </div>
@@ -975,35 +998,44 @@ export default function Progress() {
 			    }
 			    return reversed;
 			  })().map((s, i) => (
-			    <div key={i} className="border-b border-[#E6D8BF] last:border-0">
+			    <div key={i} className="bg-[#090D18] border border-[#242E48] rounded-xl p-2 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
 				  <div
 					onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-					className="w-full flex items-center justify-between py-2 text-left cursor-pointer"
+					className="w-full flex items-center justify-between gap-3 text-left cursor-pointer"
 				  >
-				    <div>
+                    <div
+                      className="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${color}1A`, color }}
+                    >
+                      {(() => {
+                        const Icon = VISUALS[tab]?.icon;
+                        return Icon ? <Icon size={17} strokeWidth={2.4} /> : null;
+                      })()}
+                    </div>
+				    <div className="min-w-0 flex-1">
 					  <div className="flex items-center gap-1.5">
-					    <p className="text-sm text-[#201A14]">{s.label}</p>
+					    <p className="text-sm text-[#F3F5FC] font-semibold truncate">{s.label}</p>
 					    {s.ai_summary && (
-						  <Sparkles size={11} className="text-[#0284C7] opacity-70" />
+						  <Sparkles size={11} style={{ color, opacity: 0.8 }} />
 					    )}
 					  </div>
-					  <p className="text-xs text-[#7A6B5B]">
+					  <p className="text-xs text-[#9BA6C4]">
 					    {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
 					  </p>
 				    </div>
-				    <div className="flex items-center gap-2">
+				    <div className="flex items-center gap-2 flex-shrink-0">
 					  <div className="text-right">
 					    <p className="text-sm font-mono font-semibold" style={{ color }}>
-						  {formatPaceDisplay(s.pace)} <span className="text-xs text-[#7A6B5B]">{paceLabel}</span>
+						  {formatPaceDisplay(s.pace)} <span className="text-xs text-[#5C6688]">{paceLabel}</span>
 					    </p>
-					    <p className={`text-xs ${s.onTrack ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+					    <p className={`inline-flex mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.onTrack ? 'bg-[#33E1A3]/10 text-[#33E1A3]' : 'bg-[#FF5C72]/10 text-[#FF5C72]'}`}>
 						  {s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
 					    </p>
 					  </div>
 					  {s.ai_summary && (
 					    <ChevronDown
 						  size={14}
-						  className={`text-[#7A6B5B] transition-transform ${expandedId === s.id ? 'rotate-180' : ''}`}
+						  className={`text-[#9BA6C4] transition-transform ${expandedId === s.id ? 'rotate-180' : ''}`}
 					    />
 					  )}
 					  <div className="flex flex-col gap-1">
@@ -1012,7 +1044,7 @@ export default function Progress() {
 						    e.stopPropagation();
 						    setEditingSession(s);
 						  }}
-						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#9C8B73] hover:text-[#0284C7] hover:bg-[#0284C7]/10 transition-colors"
+						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#5C6688] hover:text-[#22C3FF] hover:bg-[#22C3FF]/10 transition-colors"
 					    >
 						  <Pencil size={11} />
 					    </button>
@@ -1021,7 +1053,7 @@ export default function Progress() {
 						    e.stopPropagation();
 						    handleDelete(s);
 						  }}
-						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#9C8B73] hover:text-[#DC2626] hover:bg-[#DC2626]/10 transition-colors"
+						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#5C6688] hover:text-[#FF5C72] hover:bg-[#FF5C72]/10 transition-colors"
 					    >
 						  <Trash2 size={11} />
 					    </button>
@@ -1030,12 +1062,12 @@ export default function Progress() {
 				  </div>
 
 				  {expandedId === s.id && s.ai_summary && (
-				    <div className="bg-[#FAF3E7] border border-[#E6D8BF] rounded-xl p-3 mb-3 -mt-1">
+				    <div className="bg-[#1A2338] border border-[#242E48] rounded-xl p-3 mt-2">
 					  <div className="flex items-center gap-1.5 mb-1.5">
-					    <Sparkles size={11} className="text-[#0284C7]" />
-					    <p className="text-[10px] uppercase tracking-wider text-[#0284C7]">AI Insight</p>
+					    <Sparkles size={11} style={{ color }} />
+					    <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color }}>AI Insight</p>
 					  </div>
-					  <p className="text-xs text-[#5C4F3F] leading-relaxed">{s.ai_summary}</p>
+					  <p className="text-xs text-[#9BA6C4] leading-relaxed">{s.ai_summary}</p>
 				    </div>
 				  )}
 			    </div>
