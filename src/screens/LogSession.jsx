@@ -16,7 +16,6 @@ const DISCIPLINES = [
 
 const FEEL_EMOJI = ['😓', '😐', '🙂', '😊', '🔥'];
 
-// Duration input — separate HH MM SS fields, mobile-friendly numeric pad
 function DurationInput({ label, value, onChange }) {
   // Parse incoming hh:mm:ss or mm:ss string into parts
   const parse = (v) => {
@@ -51,14 +50,14 @@ function DurationInput({ label, value, onChange }) {
             value={h} placeholder="0"
             onChange={e => { setH(e.target.value); emit(e.target.value, m, s); }}
             className={fieldClass} />
-          <p className="text-[10px] text-[#7A6B5B] mt-0.5">HH</p>
+          <p className="text-[10px] text-[#7A6B5B] mt-0.5">MM</p>
         </div>
         <div className="text-center">
           <input type="number" inputMode="numeric" min="0" max="59"
             value={m} placeholder="00"
             onChange={e => { setM(e.target.value); emit(h, e.target.value, s); }}
             className={fieldClass} />
-          <p className="text-[10px] text-[#7A6B5B] mt-0.5">MM</p>
+          <p className="text-[10px] text-[#5C6688] mt-1">MM</p>
         </div>
         <div className="text-center">
           <input type="number" inputMode="numeric" min="0" max="59"
