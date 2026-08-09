@@ -314,7 +314,7 @@ export default function LogSession() {
       </div>
 
       {/* ── Scrollable form ── */}
-      <div className="px-4 pt-4 pb-36 max-w-lg mx-auto space-y-4">
+      <div className="px-4 pt-4 pb-48 max-w-lg mx-auto space-y-4">
 
         {/* Date + Distance row */}
         <div className="grid grid-cols-2 gap-3">
@@ -415,8 +415,8 @@ export default function LogSession() {
       </div>
 
       {/* ── Fixed save button ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-3 max-w-lg mx-auto"
-        style={{ background: 'linear-gradient(to top, #03050B 60%, transparent)' }}>
+      <div className="fixed left-0 right-0 z-20 px-4 pt-3 max-w-lg mx-auto"
+		style={{ bottom: '64px', paddingBottom: '12px', background: 'linear-gradient(to top, #03050B 70%, transparent)' }}>
         <button
           onClick={handleSave}
           disabled={!canSave() || saving}

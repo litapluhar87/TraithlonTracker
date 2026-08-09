@@ -468,28 +468,42 @@ export default function Progress() {
   return (
     <div className="min-h-screen bg-[#03050B] pb-24 px-4 pt-3 max-w-lg mx-auto text-[#F3F5FC]">
  
-      {/* Discipline tabs */}
-	  {/* Discipline tabs — RACL style top nav */}
+	  {/* Discipline tabs */}
 	  <div className="relative grid grid-cols-4 mb-4 rounded-full bg-[#090D18] border border-[#242E48] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)] overflow-hidden">
-        <div
-          className="absolute top-1 bottom-1 left-1 w-[calc(25%-0.5rem)] rounded-full shadow-[0_0_22px_rgba(139,124,255,0.24)] transition-transform duration-300 ease-out"
-          style={{
-            transform: `translateX(${TAB_INDEX[tab] * 100}%)`,
-            background: VISUALS[tab]?.gradient,
-          }}
-        />
+
+	    {/* Active pill */}
+	    <div className="absolute inset-1 grid grid-cols-4 pointer-events-none">
+		  <div
+		    className="rounded-full shadow-[0_0_22px_rgba(139,124,255,0.24)] transition-all duration-300 ease-out"
+		    style={{
+			  gridColumn: TAB_INDEX[tab] + 1,
+			  background: VISUALS[tab]?.gradient,
+		    }}
+		  />
+	    </div>
+
+	    {/* Tab buttons */}
 	    {TABS.map(t => (
 		  <button
 		    key={t.key}
-		    onClick={() => { setTab(t.key); setDisciplineExpanded(false); setBikeFilter('outdoor'); setSwimFilter('pool'); }}
-		    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-xs font-semibold transition-colors ${tab === t.key ? 'text-[#03050B]' : 'text-[#9BA6C4]'}`}>
-            {(() => {
-              const Icon = VISUALS[t.key]?.icon;
-              return Icon ? <Icon size={15} strokeWidth={2.4} /> : null;
-            })()}
-		    <span>
-			  {t.label}
-		    </span>
+		    onClick={() => {
+			  setTab(t.key);
+			  setDisciplineExpanded(false);
+			  setBikeFilter('outdoor');
+			  setSwimFilter('pool');
+		    }}
+		    className={`relative z-10 flex items-center justify-center gap-1.5 py-2.5 rounded-full text-xs font-semibold transition-colors
+			  ${tab === t.key
+			    ? 'text-[#03050B]'
+			    : 'text-[#9BA6C4]'
+			  }`}
+		  >
+		    {(() => {
+			  const Icon = VISUALS[t.key]?.icon;
+			  return Icon ? <Icon size={15} strokeWidth={2.4} /> : null;
+		    })()}
+
+		    <span>{t.label}</span>
 		  </button>
 	    ))}
 	  </div>
