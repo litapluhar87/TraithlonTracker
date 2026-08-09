@@ -1013,95 +1013,102 @@ export default function Progress() {
 			    return reversed;
 			  })().map((s, i) => (
 			    <div key={i} className="bg-[#090D18] border border-[#242E48] rounded-xl p-2 shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
-				  <div
-				    onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
-				    className="w-full cursor-pointer text-left"
-				  >
-				    {/* Row 1 — Date gets maximum width */}
-				    <div className="flex items-center justify-between gap-2">
-					  <div className="min-w-0 flex items-center gap-1.5">
-					    <p className="text-sm text-[#F3F5FC] font-semibold truncate">
-						  {s.label}
-					    </p>
+                  <div
+                    onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
+                    className="w-full cursor-pointer text-left"
+                  >
+                    {/* ROW 1 — Date | On track/Behind + extrapolated time | Edit */}
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
+                      
+                      {/* Date */}
+                      <div className="min-w-0 flex items-center gap-1.5">
+                        <p className="text-sm text-[#F3F5FC] font-semibold truncate">
+                          {s.label}
+                        </p>
 
-					    {s.ai_summary && (
-						  <Sparkles size={11} style={{ color, opacity: 0.8 }} />
-					    )}
-					  </div>
+                        {s.ai_summary && (
+                          <Sparkles size={11} style={{ color, opacity: 0.8 }} />
+                        )}
+                      </div>
 
-					  <div className="flex flex-col gap-1 flex-shrink-0">
-					    <button
-						  onClick={(e) => {
-						    e.stopPropagation();
-						    setEditingSession(s);
-						  }}
-						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#5C6688] hover:text-[#22C3FF] hover:bg-[#22C3FF]/10 transition-colors"
-					    >
-						  <Pencil size={11} />
-					    </button>
+                      {/* On track / Behind */}
+                      <p
+                        className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold
+                          ${s.onTrack
+                            ? 'bg-[#33E1A3]/10 text-[#33E1A3]'
+                            : 'bg-[#FF5C72]/10 text-[#FF5C72]'
+                          }`}
+                      >
+                        {s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
+                      </p>
 
-					    <button
-						  onClick={(e) => {
-						    e.stopPropagation();
-						    handleDelete(s);
-						  }}
-						  className="w-6 h-6 rounded-md flex items-center justify-center text-[#5C6688] hover:text-[#FF5C72] hover:bg-[#FF5C72]/10 transition-colors"
-					    >
-						  <Trash2 size={11} />
-					    </button>
-					  </div>
-				    </div>
+                      {/* Edit — Row 1 */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingSession(s);
+                        }}
+                        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-[#5C6688] hover:text-[#22C3FF] hover:bg-[#22C3FF]/10 transition-colors"
+                        aria-label="Edit session"
+                      >
+                        <Pencil size={11} />
+                      </button>
+                    </div>
 
-				    {/* Row 2 + Row 3 */}
-				    <div className="flex items-center gap-2 mt-2">
+                    {/* ROWS 2 + 3 — Icon spans both rows */}
+                    <div className="grid grid-cols-[2rem_minmax(0,1fr)_auto] grid-rows-2 items-center gap-x-2 gap-y-0.5 mt-0.5">
 
-					  {/* Discipline icon starts from Row 2 */}
-					  <div
-					    className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0"
-					    style={{ backgroundColor: `${color}1A`, color }}
-					  >
-					    {(() => {
-						  const Icon = VISUALS[tab]?.icon;
-						  return Icon ? <Icon size={16} strokeWidth={2.4} /> : null;
-					    })()}
-					  </div>
+                      {/* Discipline icon — spans Row 2 and Row 3 */}
+                      <div
+                        className="row-span-2 w-8 h-full min-h-[42px] rounded-[9px] flex items-center justify-center"
+                        style={{ backgroundColor: `${color}1A`, color }}
+                      >
+                        {(() => {
+                          const Icon = VISUALS[tab]?.icon;
+                          return Icon ? <Icon size={16} strokeWidth={2.4} /> : null;
+                        })()}
+                      </div>
 
-					  <div className="min-w-0 flex-1">
-					    {/* Row 2 */}
-					    <p className="text-xs text-[#9BA6C4]">
-						  {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
-					    </p>
+                      {/* ROW 2 — Distance + Duration */}
+                      <p className="min-w-0 text-xs text-[#9BA6C4] truncate">
+                        {s.dist_display.toFixed(1)} {distLabel} · {formatDuration(s.duration_s)}
+                      </p>
 
-					    {/* Row 3 */}
-					    <div className="flex items-center justify-between gap-2 mt-1">
-						  <p className="text-sm font-mono font-semibold truncate" style={{ color }}>
-						    {formatPaceDisplay(s.pace)}
-						    <span className="text-xs text-[#5C6688] ml-1">
-							  {paceLabel}
-						    </span>
-						  </p>
+                      {/* Delete — Row 2 */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(s);
+                        }}
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-[#5C6688] hover:text-[#FF5C72] hover:bg-[#FF5C72]/10 transition-colors"
+                        aria-label="Delete session"
+                      >
+                        <Trash2 size={11} />
+                      </button>
 
-						  <p
-						    className={`inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold
-							  ${s.onTrack
-							    ? 'bg-[#33E1A3]/10 text-[#33E1A3]'
-							    : 'bg-[#FF5C72]/10 text-[#FF5C72]'
-							  }`}
-						  >
-						    {s.onTrack ? '✅ on track' : '⚠️ behind'} · {formatDuration(s.extrapolated_s)}
-						  </p>
-					    </div>
-					  </div>
+                      {/* ROW 3 — Pace */}
+                      <p
+                        className="min-w-0 text-sm font-mono font-semibold"
+                        style={{ color }}
+                      >
+                        {formatPaceDisplay(s.pace)}
+                        <span className="text-xs text-[#5C6688] ml-1">
+                          {paceLabel}
+                        </span>
+                      </p>
 
-					  {s.ai_summary && (
-					    <ChevronDown
-						  size={14}
-						  className={`text-[#9BA6C4] flex-shrink-0 transition-transform
-						    ${expandedId === s.id ? 'rotate-180' : ''}`}
-					    />
-					  )}
-				    </div>
-				  </div>
+                      {/* Expand / Collapse — Row 3 */}
+                      {s.ai_summary ? (
+                        <ChevronDown
+                          size={14}
+                          className={`text-[#9BA6C4] transition-transform
+                            ${expandedId === s.id ? 'rotate-180' : ''}`}
+                        />
+                      ) : (
+                        <div className="w-6" />
+                      )}
+                    </div>
+                  </div>
 
 				  {expandedId === s.id && s.ai_summary && (
 				    <div className="bg-[#1A2338] border border-[#242E48] rounded-xl p-3 mt-2">
